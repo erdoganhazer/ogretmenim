@@ -1,0 +1,120 @@
+rules_version = '2';
+// ÖğretmeniM — Firestore güvenlik kuralları. Yetki burada denetlenir; uygulamadaki denetimler yalnız kolaylık içindir.
+// Kişiler: kisiler/{kisiId} {ad, kullanici_adi, rol: yonetici|veli|ogrenci, aktif, ogrenciler: [kisiId], uid}
+// Giriş eşlemesi: uidler/{authUid} {kisi}  ·  girisler/{kullanici_adi} {eposta}
+// Öğrenci verisi: ogrenciler/{oid}/... (oid = öğrencinin kisiId'si)
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function girdi() { return request.auth != null && exists(/databases/$(database)/documents/uidler/$(request.auth.uid)); }
+    function kisiId() { return get(/databases/$(database)/documents/uidler/$(request.auth.uid)).data.kisi; }
+    function ben() { return get(/databases/$(database)/documents/kisiler/$(kisiId())).data; }
+    function aktif() { return girdi() && ben().aktif == true; }
+    function yonetici() { return aktif() && ben().rol == 'yonetici'; }
+    function veliOf(oid) { return aktif() && ben().rol in ['veli', 'yonetici'] && oid in ben().ogrenciler; }
+    function ogrenciOf(oid) { return aktif() && ben().rol == 'ogrenci' && kisiId() == oid; }
+    function erisir(oid) { return veliOf(oid) || ogrenciOf(oid); }
+    function degisen() { return request.resource.data.diff(resource.data).affectedKeys(); }
+    function kayitAlanlari() { return ['id', 'olusturma', 'degisme', 'kaynak', 'silindi']; }
+
+    // Kullanıcı adıyla giriş: adı bilen e-postayı okur; liste alınamaz.
+    match /girisler/{ad} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if yonetici();
+    }
+    match /uidler/{uid} {
+      allow get: if request.auth != null && (request.auth.uid == uid || yonetici());
+      allow list: if yonetici();
+      allow write: if yonetici();
+    }
+    match /kisiler/{k} {
+      // herkes kendi kaydını; veli kendi öğrencilerinin adını; yönetici hepsini görür
+      allow get: if girdi() && (kisiId() == k || yonetici() || veliOf(k));
+      allow list: if yonetici();
+      allow write: if yonetici();
+    }
+    // Yönetici ilk kurulum: henüz hiç yönetici yokken ilk hesabın kendini yönetici yapabilmesi için kurulum belgesi
+    match /sistem/kurulum {
+      allow get: if true;
+      allow create: if request.auth != null && request.resource.data.yonetici_uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['yonetici_uid', 'yonetici_kisi', 'zaman']);
+      allow update, delete: if false;
+    }
+    match /uidler/{uid} {
+      allow create: if request.auth != null && request.auth.uid == uid
+        && getAfter(/databases/$(database)/documents/sistem/kurulum).data.yonetici_uid == uid;
+    }
+    match /kisiler/{k} {
+      allow create: if request.auth != null
+        && getAfter(/databases/$(database)/documents/sistem/kurulum).data.yonetici_uid == request.auth.uid
+        && getAfter(/databases/$(database)/documents/sistem/kurulum).data.yonetici_kisi == k
+        && request.resource.data.rol == 'yonetici';
+    }
+
+    match /ogrenciler/{oid} {
+      // Ana belge: profil, ayarlar, ders programı, tohum işaretleri — öğrenci okur, veli yazar
+      allow get: if erisir(oid) || yonetici();
+      allow list: if false;
+      allow create, update: if veliOf(oid) || yonetici();
+      allow delete: if yonetici();
+
+      // Kayıt koleksiyonları
+      match /{kol}/{kid} {
+        allow read: if erisir(oid) && kol in ['dersler', 'odevler', 'etkinlikler', 'baglantilar', 'cep_notlari', 'mesajlar',
+                                              'kelime_defterleri', 'kelimeler', 'ders_notlari'];
+        // Veli her şeyi yazar (silme yok: silindi işareti). Notlarım (ders_notlari) öğrencinindir: veli yalnız okur.
+        allow create, update: if veliOf(oid) && kol in ['dersler', 'odevler', 'etkinlikler', 'baglantilar', 'cep_notlari', 'mesajlar',
+                                                       'kelime_defterleri', 'kelimeler']
+                                && request.resource.data.id == kid;
+        // Öğrenci: korumalı koleksiyonlara yazamaz; kendi kaydını 'ogrenci' kaynağıyla açar; not (puan) giremez
+        allow create: if ogrenciOf(oid) && kol in ['odevler', 'etkinlikler', 'cep_notlari', 'mesajlar', 'ders_notlari']
+                         && request.resource.data.id == kid && request.resource.data.kaynak == 'ogrenci'
+                         && !('puan' in request.resource.data && request.resource.data.puan != null)
+                         && (kol != 'mesajlar' || request.resource.data.kimden == 'ogrenci');
+        allow update: if ogrenciOf(oid) && kol in ['odevler', 'etkinlikler', 'cep_notlari', 'mesajlar', 'ders_notlari']
+                         && !degisen().hasAny(['id', 'olusturma', 'kaynak', 'puan'])
+                         && (resource.data.kaynak != 'veli'
+                             || (kol == 'odevler' && degisen().hasOnly(['bitti', 'bitti_zaman', 'degisme', 'kaynaklar']))
+                             || (kol == 'mesajlar' && degisen().hasOnly(['okundu', 'okunma_zamani', 'tamam', 'degisme'])))
+                         && (kol != 'mesajlar' || degisen().hasOnly(['okundu', 'okunma_zamani', 'tamam', 'degisme', 'silindi']));
+        // Öğrencinin girdiği ödevdeki kaynak adları dersin kaynak listesine eklenir (eski motordaki gibi)
+        allow update: if ogrenciOf(oid) && kol == 'dersler' && degisen().hasOnly(['kaynaklar', 'kaynak_gizli']);
+        allow delete: if false;
+      }
+
+      // Plan ayarları: veli yazar
+      match /plan/ayarlar {
+        allow read: if erisir(oid);
+        allow write: if veliOf(oid);
+      }
+      // Plan günleri (çalışma kayıtları, gün bilgisi, özel gün, sıra): ikisi de yazar.
+      // Öğrenci sırayı ancak velinin izni (arin_sira) varsa değiştirir.
+      match /plan_gun/{tarih} {
+        allow read: if erisir(oid);
+        allow write: if veliOf(oid);
+        allow create, update: if ogrenciOf(oid) && (
+          !('sira' in request.resource.data) || (resource != null && 'sira' in resource.data && request.resource.data.sira == resource.data.sira)
+          || get(/databases/$(database)/documents/ogrenciler/$(oid)/plan/ayarlar).data.ayarlar.arin_sira == true);
+        allow delete: if ogrenciOf(oid) && !('sira' in resource.data);
+      }
+      // Alıştırma sonuçları: gün başına bir belge, yalnız eklenir. Veli özetleri okur; öğrenci kendi oyunlarının
+      // uyarlanması için okur (ekranda sayı gösterilmez).
+      match /alistirmalar/{gun} {
+        allow read: if erisir(oid);
+        allow create: if erisir(oid);
+        allow update: if erisir(oid) && request.resource.data.kayitlar.size() >= resource.data.kayitlar.size()
+                         && request.resource.data.kayitlar[0:resource.data.kayitlar.size()] == resource.data.kayitlar;
+        allow delete: if false;
+      }
+      // İşlem günlüğü: yalnız veli okur; ikisi de ekler.
+      match /gunluk/{gun} {
+        allow read: if veliOf(oid);
+        allow create: if erisir(oid);
+        allow update: if erisir(oid) && request.resource.data.kayitlar.size() >= resource.data.kayitlar.size()
+                         && request.resource.data.kayitlar[0:resource.data.kayitlar.size()] == resource.data.kayitlar;
+        allow delete: if false;
+      }
+    }
+  }
+}

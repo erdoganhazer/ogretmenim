@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ÖğretmeniM</title>
+<link rel="icon" href="img/ikon.png">
+<link rel="stylesheet" href="css/tema.css">
+</head>
+<body>
+
+<div class="giris-ekrani" id="giris-ekrani">
+  <form class="giris-kart" id="giris-form" autocomplete="on">
+    <img src="img/logo.png" alt="" class="giris-logo">
+    <h1>Öğretmen<b>iM</b></h1>
+    <p class="giris-not" id="giris-not">Kullanıcı adın ve şifrenle gir.</p>
+    <label id="giris-ad-alan" hidden>Adın <input id="giris-adsoyad" maxlength="40" autocomplete="name"></label>
+    <label>Kullanıcı adı <input id="giris-kullanici" maxlength="30" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+    <label>Şifre <input type="password" id="giris-sifre" maxlength="64" autocomplete="current-password" required></label>
+    <label id="giris-sifre2-alan" hidden>Şifre tekrar <input type="password" id="giris-sifre2" maxlength="64" autocomplete="new-password"></label>
+    <div class="giris-hata" id="giris-hata" role="alert"></div>
+    <button type="submit" class="dugme ana-dugme giris-dugme" id="giris-dugme">Giriş</button>
+  </form>
+  <div class="giris-kart giris-secim" id="giris-secim" hidden>
+    <h2>Hangi öğrenci?</h2>
+    <div class="giris-ogrenciler" id="giris-ogrenciler"></div>
+    <button type="button" class="dugme" id="giris-hesaplar" hidden>👥 Hesapları yönet</button>
+    <button type="button" class="dugme" id="giris-cikis">Çıkış</button>
+  </div>
+  <div class="giris-yukleniyor" id="giris-yukleniyor" hidden>Yükleniyor…</div>
+</div>
+
+<header class="ust">
+  <div class="marka">
+    <img src="img/logo.png" alt="" class="marka-logo">
+    <span class="marka-yazi"><span class="marka-ad">Öğretmen<b>iM</b></span><small class="marka-surum" id="marka-surum" title="Kurulu sürüm"></small></span>
+  </div>
+  <nav class="sekmeler" id="sekmeler">
+    <button data-sayfa="ana" class="aktif">🏠 Bugün</button>
+    <button data-sayfa="plan">✏️ Çalışma Masam</button>
+    <button data-sayfa="ogren">🎯 Öğren</button>
+    <button data-sayfa="defterler">📒 Defterim</button>
+  </nav>
+  <button class="prova-dugme" id="prova-ac" type="button" title="Sınav provası — istediğin zaman">🎯 Sınav provası</button>
+  <div class="oturum-kutu" id="oturum-kutu">
+    <button type="button" class="oturum-ad" id="oturum-ad" title="Hesap"></button>
+    <div class="oturum-menu" id="oturum-menu" hidden>
+      <div class="oturum-kim" id="oturum-kim"></div>
+      <button type="button" id="oturum-ogrenci-degistir" hidden>🔁 Öğrenci değiştir</button>
+      <button type="button" id="oturum-hesaplar" hidden>👥 Hesapları yönet</button>
+      <button type="button" id="oturum-sifre">🔑 Şifremi değiştir</button>
+      <button type="button" id="oturum-cikis">🚪 Çıkış</button>
+    </div>
+  </div>
+  <div class="veli-gosterge" id="veli-gosterge" hidden><span id="veli-kalan"></span><button id="veli-kilitle" hidden></button></div>
+  <button class="baglanti-uyari" id="baglanti-uyari" type="button" hidden title="Veli bilgisayarıyla eşitleme bir süredir yapılamıyor — onarmak için tıkla">⚠ Onar</button>
+  <div class="muzik-kap">
+    <button class="mesaj-dugme muzik-dugme" id="muzik-ac" title="Müzik"><span class="muzik-simge">🎵</span><span class="muzik-cubuk"><i></i><i></i><i></i></span></button>
+    <div class="muzik-panel" id="muzik-panel" hidden>
+      <div class="muzik-baslik">🎧 Dinlendirici Müzik</div>
+      <div class="muzik-simdi" id="muzik-simdi"></div>
+      <div class="muzik-kontrol">
+        <button class="muzik-tus ana" id="muzik-oynat" title="Çal">▶</button>
+        <button class="muzik-tus" id="muzik-durdur" title="Durdur">⏹</button>
+        <label class="muzik-ses-kap" title="Ses">🔈<input type="range" id="muzik-ses" min="0" max="100" step="1">🔊</label>
+      </div>
+      <div class="muzik-liste" id="muzik-liste"></div>
+      <button class="dugme muzik-ekle" id="muzik-ekle-ac" type="button">＋ MP3 ekle</button>
+      <div class="muzik-gozat" id="muzik-gozat" hidden></div>
+    </div>
+  </div>
+  <button class="mesaj-dugme" id="mesaj-ac" title="Mesajlar">💬<span class="rozet-sayi" id="mesaj-sayi" hidden></span></button>
+  <button class="mesaj-dugme ayar-dugme" data-git="ayarlar" title="Ayarlar">⚙️</button>
+  <div class="saat" id="saat"></div>
+</header>
+
+<div class="govde">
+  <main class="sayfalar">
+
+    <!-- PLANIM (0.18): "Şimdi" odaklı, süre gösterilmez -->
+    <section class="sayfa" id="sayfa-plan">
+      <div class="pl-izgara">
+        <div class="pl-sol">
+          <div class="pl-ust">
+            <img src="img/logo.png" alt="">
+            <div class="rehber-balon" id="rehber-balon"><p id="rehber-ana"></p></div>
+            <div class="pl-ilerleme" id="pl-ilerleme"></div>
+          </div>
+          <div id="pl-okul"></div>
+          <div id="pl-yazili"></div>
+          <div id="pl-simdi"></div>
+          <div id="pl-sonra"></div>
+          <div class="pl-degerlendirme" id="plan-degerlendirme" hidden></div>
+        </div>
+        <div class="pl-sag">
+          <div class="pl-araclar"><div class="pl-araclar-baslik">🧰 Araçlarım</div><div class="arac-izgara" id="araclar"></div></div>
+          <div class="pl-sekmeler" id="pl-sekmeler">
+            <button data-sekme="hergun" class="aktif">⭐ Her gün</button>
+          </div>
+          <div class="pl-sekme-ic" id="pl-sekme-ic"></div>
+          <details class="pl-sag-alt pl-diger">
+            <summary>⚙️ Ödev ekle ve diğer</summary>
+            <button class="dugme" id="liste-ac">📋 Haftalık ödev listesi gir</button>
+            <button class="dugme" data-pl="tek-odev">＋ Tek ödev ekle</button>
+            <button class="baglanti" data-pl="ozel">Bugün vaktim farklı</button>
+          </details>
+        </div>
+      </div>
+      <div class="pl-haftalik" id="pl-haftalik"></div>
+    </section>
+
+    <!-- ANA EKRAN -->
+    <section class="sayfa aktif" id="sayfa-ana">
+      <div class="profil-kart">
+        <div class="profil-foto" id="ana-foto"></div>
+        <div class="profil-bilgi">
+          <div class="selam" id="selam">Merhaba!</div>
+          <div class="ad" id="ana-ad"></div>
+          <div class="okul-satir" id="ana-okul"></div>
+        </div>
+        <div class="tarih-kutu">
+          <div class="tarih-gun" id="tarih-gun"></div>
+          <div class="tarih-ay" id="tarih-ay"></div>
+        </div>
+      </div>
+
+      <div class="motivasyon" id="motivasyon"></div>
+
+      <div class="ilk-kurulum" id="ilk-kurulum" hidden>
+        Hoş geldin! Başlamak için <button class="baglanti" data-git="ayarlar">Ayarlar</button> bölümünden adını ve fotoğrafını ekle.
+      </div>
+
+      <div class="ana-siradaki" id="ana-siradaki"></div>
+
+      <div class="ana-izgara">
+        <div class="panel">
+          <div class="panel-baslik"><span id="program-baslik">Bugünün dersleri</span><span class="oy-sag"><span class="rozet" id="program-rozet"></span><button class="baglanti kucuk-baglanti" data-git="program">Ders programı ›</button></span></div>
+          <div id="program-ozet"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-baslik">Yaklaşan sınavlar <button class="baglanti kucuk-baglanti" data-git="dersler">Sonuçlarım ›</button></div>
+          <div id="sinav-takvimi"></div>
+          <div class="ana-hazirlan"><button class="dugme" data-git="ogren">🎯 Yazılılara hazırlan</button><button class="dugme" data-prova>📝 Sınav provası</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ÖĞREN (0.28): yazılılar, kelime defterleri, oyunlar tek sayfada -->
+    <section class="sayfa" id="sayfa-ogren">
+      <div class="ogren-sekmeler" id="ogren-sekmeler">
+        <button data-ogren="yazili" class="aktif">📝 Yazılılarım</button>
+        <button data-ogren="kelime">📚 Kelime Defterim</button>
+        <button data-ogren="oyun">🎮 Oyunlar</button>
+      </div>
+      <div class="ogren-bolum" data-bolum="yazili">
+        <div class="ogren-prova" id="ogren-prova"></div>
+        <div class="panel yazili-panel" id="yazili-panel" hidden>
+          <div class="panel-baslik">Yazılılarım <span class="panel-alt">Konuları çalış, deneme sınavı çöz</span></div>
+          <div class="yazili-kartlari" id="yazili-kartlari"></div>
+        </div>
+      </div>
+      <div class="ogren-bolum" data-bolum="kelime" hidden>
+        <div class="panel kelime-panel" id="kelime-panel" hidden>
+          <div class="panel-baslik">Kelime Defterim <span class="panel-alt">Kelimeleri öğren, oyunlarla pekiştir</span></div>
+          <div class="kd-kartlari" id="kelime-kartlari"></div>
+        </div>
+      </div>
+      <div class="ogren-bolum" data-bolum="oyun" hidden>
+        <div class="panel mini-oyunlar" id="mini-oyunlar">
+          <div class="panel-baslik">Mini Oyunlar <span class="panel-alt">Bir ders seç, sonra ünitesini</span></div>
+          <div class="oyun-dersleri" id="oyun-dersleri"></div>
+          <div class="oyun-kartlari" id="oyun-kartlari"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DERSLER -->
+    <section class="sayfa" id="sayfa-dersler">
+      <button class="geri-baglanti" data-git="ana">‹ Bugün</button>
+      <div class="sayfa-ust">
+        <h1 class="sayfa-baslik">Dersler</h1>
+        <div class="dugme-grubu">
+          <select id="ders-sinif" class="sinif-sec" hidden title="Sınıf"></select>
+          <button class="dugme veli-ozel" id="ders-duzenle">✎ Dersleri düzenle</button>
+          <button class="dugme ana-dugme" id="not-ekle">＋ Sonuç ekle</button>
+        </div>
+      </div>
+      <div class="panel ders-duzen" id="ders-duzen" hidden>
+        <div class="panel-baslik">Ders listesi
+          <button class="dugme kucuk" id="ders-ekle">＋ Ders ekle</button>
+        </div>
+        <div id="ders-listesi"></div>
+      </div>
+      <div class="panel sonuc-ust" id="genel-ortalama"></div>
+      <div class="sonuc-izgara" id="ders-kartlari"></div>
+    </section>
+
+    <!-- DEFTERLER -->
+    <section class="sayfa" id="sayfa-defterler">
+      <div class="ogren-sekmeler alt-sekme"><button data-git="defterler" class="aktif">📒 Konu defterlerim</button><button data-git="cep">🗒️ Cep Defterim</button></div>
+      <div class="defter-duzen">
+        <aside class="defter-sol">
+          <select id="defter-sinif" class="sinif-sec" hidden title="Sınıf"></select>
+          <input id="defter-arama" class="defter-arama" type="search" placeholder="🔍 Defterlerde ara">
+          <button class="dugme kucuk ders-notu-dugme" id="ders-notu-cikar">📄 Ders notu çıkar</button>
+          <div class="defter-agac" id="defter-agac"></div>
+        </aside>
+        <div class="defter-icerik" id="defter-icerik"></div>
+      </div>
+    </section>
+
+    <!-- CEP DEFTERİM -->
+    <section class="sayfa" id="sayfa-cep">
+      <div class="ogren-sekmeler alt-sekme"><button data-git="defterler">📒 Konu defterlerim</button><button data-git="cep" class="aktif">🗒️ Cep Defterim</button></div>
+      <div class="sayfa-ust">
+        <h1 class="sayfa-baslik">📒 Cep Defterim</h1>
+        <button class="dugme ana-dugme" id="cep-ekle">＋ Yeni not</button>
+      </div>
+      <p class="cep-giris">Aklına gelenleri, hatırlamak istediklerini, küçük planlarını buraya yazabilirsin. 📌 ile önemli notunu en üste iğnele!</p>
+      <div class="cep-izgara" id="cep-izgara"></div>
+    </section>
+
+    <!-- DERS PROGRAMI -->
+    <section class="sayfa" id="sayfa-program">
+      <button class="geri-baglanti" data-git="ana">‹ Bugün</button>
+      <div class="sayfa-ust">
+        <h1 class="sayfa-baslik">Ders Programı</h1>
+        <div class="dugme-grubu">
+          <span class="durum-yazi veli-ozel" id="program-kayit"></span>
+          <button class="dugme veli-ozel" id="program-duzenle">✎ Düzenle</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-baslik">Haftalık Program</div>
+        <div class="izgara-kap" id="haftalik"></div>
+      </div>
+
+      <div class="panel saat-paneli">
+        <div class="panel-baslik">Ders Saatleri
+          <button class="dugme kucuk sadece-duzen" id="saat-ekle">＋ Saat ekle</button>
+        </div>
+        <div id="saat-listesi"></div>
+        <details class="hizli sadece-duzen">
+          <summary>Hızlı doldur</summary>
+          <div class="hizli-form">
+            <label>İlk ders başlangıcı <input id="h-bas" class="saat-gir" value="09:00" maxlength="5" inputmode="numeric"></label>
+            <label>Ders süresi (dk) <input type="number" id="h-sure" value="40" min="20" max="90"></label>
+            <label>Teneffüs (dk) <input type="number" id="h-ten" value="10" min="0" max="60"></label>
+            <label>Ders sayısı <input type="number" id="h-sayi" value="9" min="1" max="14"></label>
+            <label>Öğle arası şu dersten sonra <input type="number" id="h-ogle-sira" value="5" min="0" max="13"></label>
+            <label>Öğle arası (dk) <input type="number" id="h-ogle" value="40" min="0" max="120"></label>
+            <button class="dugme ana-dugme" id="h-olustur" type="button">Saatleri oluştur</button>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- AYARLAR -->
+    <section class="sayfa" id="sayfa-ayarlar">
+      <h1 class="sayfa-baslik">Ayarlar</h1>
+      <div class="panel form" id="gorunum-ayarlari">
+        <div class="panel-baslik">Görünüm</div>
+        <div class="yazi-boyutu" id="yazi-boyutu">
+          <span>Yazı boyutu</span>
+          <button type="button" data-boyut="normal">A</button>
+          <button type="button" data-boyut="buyuk" class="b2">A</button>
+          <button type="button" data-boyut="cok" class="b3">A</button>
+        </div>
+      </div>
+
+      <div class="panel form hakkinda" id="hakkinda">
+        <img src="img/logo.png" alt="" id="gizli-giris" draggable="false">
+        <div><b>ÖğretmeniM</b><small id="surum-yazi"></small><small>Ödevlerin, derslerin ve defterlerin hep yanında. 🌟</small></div>
+      </div>
+
+      <div class="veli-ozel" id="veli-ayarlari">
+      <div class="panel plan-veli-panel" id="plan-veli-panel">
+        <div class="panel-baslik">📋 Çalışma planı <span class="panel-alt">Son 7 gün · yalnız veli görür</span>
+          <button class="dugme kucuk" type="button" id="plan-veli-yenile">Yenile</button></div>
+        <div id="plan-veli-ozet"></div>
+        <form id="plan-ayar-form" autocomplete="off"></form>
+      </div>
+      <div class="panel rapor-panel" id="rapor-ayari">
+        <div class="panel-baslik">📊 Öğrenci raporu <span class="panel-alt">Ödev alışkanlıkları ve konu durumu · yalnız veli görür</span></div>
+        <div id="rapor-ic"></div>
+      </div>
+
+      <div class="panel gelisim-panel" id="gelisim-panel">
+        <div class="panel-baslik">📈 Gelişim <span class="panel-alt">Mini oyunlar ve Cevap Kontrol · yalnız veli görür</span>
+          <button class="dugme kucuk" type="button" id="gelisim-yenile">Yenile</button></div>
+        <div id="gelisim"></div>
+      </div>
+        <div class="veli-baslik">🔓 Veli ayarları</div>
+      <div class="panel form" id="sinif-ayarlari">
+        <div class="panel-baslik">Sınıf</div>
+        <p class="panel-not ust-not" id="sinif-bilgi"></p>
+        <div class="form-alt"><button type="button" class="dugme" id="sinif-gec">Yeni sınıfa geç</button></div>
+      </div>
+      <form class="panel form" id="profil-form" autocomplete="off">
+        <div class="panel-baslik">Öğrenci</div>
+        <div class="form-satir foto-satir">
+          <label class="foto-sec" data-alan="ogrenci_foto">
+            <span class="foto-onizleme" id="onizleme-ogrenci_foto"></span>
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+            <span class="foto-yazi">Fotoğraf seç</span>
+          </label>
+          <div class="alanlar">
+            <label>Ad <input name="ogrenci_adi" maxlength="40"></label>
+            <label>Soyad <input name="ogrenci_soyadi" maxlength="40"></label>
+            <label>Okul <input name="okul" maxlength="80"></label>
+            <label>Şube <input name="sube" maxlength="12" placeholder="5/A"></label>
+          </div>
+        </div>
+
+        <div class="panel-baslik veli">Veli</div>
+        <div class="form-satir foto-satir">
+          <label class="foto-sec" data-alan="veli_foto">
+            <span class="foto-onizleme" id="onizleme-veli_foto"></span>
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+            <span class="foto-yazi">Fotoğraf seç</span>
+          </label>
+          <div class="alanlar">
+            <label>Veli adı <input name="veli_adi" maxlength="40"></label>
+          </div>
+        </div>
+
+        <div class="form-alt">
+          <span class="durum-yazi" id="kayit-durum"></span>
+          <button type="submit" class="dugme ana-dugme">Kaydet</button>
+        </div>
+      </form>
+
+      <div class="panel form" id="arac-ayarlari">
+        <div class="panel-baslik">Araçlar</div>
+        <div class="anahtar-satirlari">
+          <label class="anahtar"><input type="checkbox" id="ayar-kontrol"> <span>Cevap kontrol ana ekranda görünsün</span></label>
+        </div>
+        <div class="panel-baslik alt-baslik">Bağlantı düğmeleri
+          <button class="dugme kucuk" id="baglanti-ekle" type="button">＋ Bağlantı ekle</button>
+        </div>
+        <p class="panel-not ust-not">Ana ekrandaki düğmeye basınca adres bilgisayarın tarayıcısında açılır. Simgeye bir emoji yazabilirsin (📖 🌍 🎥 🧪).</p>
+        <div id="baglanti-listesi"></div>
+      </div>
+
+      <div class="panel form" id="esitleme-ayarlari">
+        <div class="panel-baslik">Veli bilgisayarı bağlantısı
+          <button class="dugme kucuk" id="esitleme-yenile" type="button">Yenile</button>
+        </div>
+        <p class="panel-not ust-not">Veli, Windows'ta <b>Belgeler › OgretmeniM-Paylasim › Veli Paneli.html</b> dosyasını Chrome ile açarak ödev, sınav ve etkinlik gönderir;
+          Arın'ın yaptıklarını görür. Bu bilgisayar paylaşım bağlıyken her 15 saniyede eşitlenir.</p>
+        <div id="esitleme-durumu"></div>
+        <div class="bag-kutu">
+          <button class="dugme ana-dugme" id="ag-bul" type="button">🔍 Bilgisayarımı bul ve bağlan</button>
+          <span class="panel-not">Modem ya da IP değiştiyse, Windows uyandıysa ya da “Girdi/Çıktı hatası” varsa buna bas.</span>
+        </div>
+        <div id="ag-sonuc"></div>
+        <details class="bag-elle"><summary>Elle adres gir</summary>
+          <div class="alanlar tek-alan"><label>Paylaşım adresi <input id="paylasim-adresi" placeholder="smb://192.168.1.9/OgretmeniM"></label></div>
+        </details>
+      </div>
+
+      <div class="panel form" id="guncelleme-ayarlari">
+        <div class="panel-baslik">Güncelleme
+          <button class="dugme kucuk" id="guncelleme-yenile" type="button">Denetle</button>
+        </div>
+        <div id="guncelleme-durumu"></div>
+        <label class="onay-satir"><input type="checkbox" id="oto-guncelle">
+          <span>Veli Paneli'nden onaylanan yeni sürümleri kendiliğinden kur <small>(Arın çalışırken beklenir)</small></span></label>
+      </div>
+
+      <div class="panel form" id="yedek-ayarlari">
+        <div class="panel-baslik">Yedekleme
+          <span class="dugme-grubu">
+            <label class="dugme kucuk">↩ Yedekten geri yükle<input type="file" id="yedek-dosya" accept=".zip,application/zip" hidden></label>
+            <button class="dugme kucuk ana-dugme" id="yedek-al" type="button">💾 Şimdi yedek al</button>
+          </span>
+        </div>
+        <p class="panel-not ust-not" id="yedek-bilgi"></p>
+        <div id="yedek-listesi"></div>
+      </div>
+
+      <div class="panel form" id="veliler-ayari">
+        <div class="panel-baslik">Veliler <button class="dugme kucuk" type="button" id="veli-ekle-ac">＋ Veli ekle</button></div>
+        <p class="panel-not ust-not">Her velinin kendi adı ve şifresi olur. Günlükte ve mesajlarda kimin yazdığı görünür. Her veli, Veli Paneli'ni bir kez kendi girişiyle <b>eşleştirir</b>; sonra panelde kendi şifresiyle girer.</p>
+        <div id="veli-listesi"></div>
+        <form class="alanlar veli-ekle-form" id="veli-ekle-form" hidden autocomplete="off">
+          <label>Ad <input id="yeni-veli-ad" maxlength="30" placeholder="Anne"></label>
+          <label>Şifre (4-8 hane) <input id="yeni-veli-pin" type="password" inputmode="numeric" maxlength="8"></label>
+          <label>Şifre tekrar <input id="yeni-veli-pin2" type="password" inputmode="numeric" maxlength="8"></label>
+          <div class="form-alt"><button type="submit" class="dugme ana-dugme">Ekle</button></div>
+        </form>
+      </div>
+
+      <form class="panel form" id="pin-form" autocomplete="off">
+        <div class="panel-baslik">Veli şifresi</div>
+        <p class="panel-not ust-not">Ders programı, ders listesi ve ayarlar bu şifreyle korunur. Ekrana 15 dakika dokunulmazsa veli modu kendiliğinden kapanır. Şifreyi değiştirmek Veli Paneli eşleşmesini bozmaz.</p>
+        <div class="alanlar">
+          <label class="genis">Şu anki şifre <input type="password" id="eski-pin" inputmode="numeric" maxlength="8"></label>
+          <label>Yeni şifre (4-8 hane) <input type="password" id="yeni-pin1" inputmode="numeric" maxlength="8"></label>
+          <label>Yeni şifre tekrar <input type="password" id="yeni-pin2" inputmode="numeric" maxlength="8"></label>
+        </div>
+        <div class="form-alt"><button type="submit" class="dugme">Şifreyi değiştir</button></div>
+      </form>
+
+      <div class="panel form gunluk-panel">
+        <div class="panel-baslik">İşlem günlüğü
+          <span class="dugme-grubu">
+            <select id="gunluk-filtre">
+              <option value="">Tümü</option>
+              <option value="ogrenci">Arın'ın yaptıkları</option>
+              <option value="veli">Velinin yaptıkları</option>
+              <option value="uyari">Uyarılar</option>
+            </select>
+            <button class="dugme kucuk" id="gunluk-yenile">Yenile</button>
+          </span>
+        </div>
+        <div class="gunluk-liste" id="gunluk-liste"></div>
+      </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ZAMAN ÇİZELGESİ (her sayfada sağda) -->
+  <aside class="cizelge">
+    <div class="cizelge-baslik">
+      <span>Zaman Çizelgesi</span>
+      <button class="dugme kucuk" id="kayit-ekle">＋ Ekle</button>
+    </div>
+    <div class="cizelge-liste" id="cizelge-liste"></div>
+  </aside>
+</div>
+
+<dialog class="pencere" id="kayit-pencere">
+  <form id="kayit-form" autocomplete="off">
+    <div class="pencere-ust">
+      <h2 id="pencere-baslik">Yeni kayıt</h2>
+    </div>
+    <nav class="tur-sekmeleri" id="tur-sekmeleri">
+      <button type="button" data-tur="odev">📘 Ödev</button>
+      <button type="button" data-tur="sinav">🧪 Sınav</button>
+      <button type="button" data-tur="etut">🎯 Etüt / Ek ders</button>
+      <button type="button" data-tur="etkinlik">📅 Etkinlik</button>
+    </nav>
+    <div class="pencere-alanlar" id="kayit-alanlar"></div>
+    <div class="pencere-alt">
+      <button type="button" class="dugme sil" id="kayit-sil" hidden>Sil</button>
+      <span class="bosluk"></span>
+      <button type="button" class="dugme" id="kayit-vazgec">Vazgeç</button>
+      <button type="submit" class="dugme ana-dugme" id="kayit-kaydet">Kaydet</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 0.17: çalışma zamanlayıcısı ve plan pencereleri -->
+<dialog class="pencere pl-pencere" id="plan-soru-pencere">
+  <form id="plan-soru-form" autocomplete="off">
+    <div class="pencere-ust"><h2 id="plan-soru-baslik"></h2></div>
+    <div class="pencere-alanlar tek-sutun" id="plan-soru-alanlar"></div>
+    <div class="pencere-alt">
+      <button type="button" class="dugme sil" id="plan-soru-sil" hidden>Kaldır</button>
+      <span class="bosluk"></span>
+      <button type="button" class="dugme" id="plan-soru-vazgec">Vazgeç</button>
+      <button type="submit" class="dugme ana-dugme" id="plan-soru-tamam">Kaydet</button>
+    </div>
+  </form>
+</dialog>
+<dialog class="pencere liste-pencere" id="liste-pencere">
+  <form id="liste-form" autocomplete="off">
+    <div class="pencere-ust"><h2>Haftalık ödev listesi</h2>
+      <p class="pencere-not">Öğretmenin listesindeki gibi satır satır yaz. Birden çok kaynak varsa <b>/</b> ile ayır (sayfaları da aynı sırayla).
+        Tablo hâlinde kopyaladığın bir listeyi ilk hücreye yapıştırabilirsin.</p></div>
+    <div class="liste-kap"><table class="liste-tablo" id="liste-tablo"></table></div>
+    <div class="pencere-alt">
+      <button type="button" class="dugme" id="liste-satir-ekle">＋ Satır</button>
+      <span class="bosluk" id="liste-bilgi"></span>
+      <button type="button" class="dugme" id="liste-vazgec">Vazgeç</button>
+      <button type="submit" class="dugme ana-dugme">Ödevleri kaydet</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog class="pencere hesap-pencere" id="hesap-pencere">
+  <div class="pencere-ust hm-ust"><h2>👥 Hesaplar</h2><button type="button" class="kapat-dugme" id="hesap-kapat" title="Kapat">✕</button></div>
+  <div class="hesap-govde">
+    <div class="hesap-liste" id="hesap-liste"></div>
+    <form class="hesap-form" id="hesap-form" autocomplete="off">
+      <h3 id="hesap-form-baslik">Yeni hesap</h3>
+      <label>Ad <input id="hf-ad" maxlength="40" required></label>
+      <label>Kullanıcı adı <input id="hf-kullanici" maxlength="30" autocapitalize="none" spellcheck="false" required></label>
+      <label>Rol <select id="hf-rol"><option value="ogrenci">Öğrenci</option><option value="veli">Veli</option><option value="yonetici">Yönetici</option></select></label>
+      <label id="hf-sifre-alan">Şifre <input id="hf-sifre" type="text" maxlength="64" minlength="6"></label>
+      <fieldset class="hf-ogrenciler" id="hf-ogrenciler-alan"><legend>Velisi olduğu öğrenciler</legend><div id="hf-ogrenciler"></div></fieldset>
+      <label class="hf-aktif" id="hf-aktif-alan" hidden><input type="checkbox" id="hf-aktif"> Hesap açık</label>
+      <div class="giris-hata" id="hf-hata" role="alert"></div>
+      <div class="dugme-grubu">
+        <button type="button" class="dugme" id="hf-yeni" hidden>＋ Yeni hesap</button>
+        <span class="bosluk"></span>
+        <button type="submit" class="dugme ana-dugme" id="hf-kaydet">Hesabı aç</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<dialog class="pencere kucuk-pencere" id="veli-pencere">
+  <form id="veli-form" autocomplete="off">
+    <div class="pencere-ust"><h2 id="veli-baslik">Veli girişi</h2></div>
+    <div class="pencere-alanlar tek-sutun">
+      <p class="veli-aciklama" id="veli-aciklama"></p>
+      <label id="veli-ad-alan" hidden>Adın (Arın seni böyle görecek) <input id="veli-ad" maxlength="30" placeholder="Baba"></label>
+      <label>Şifre <input type="password" id="veli-pin1" inputmode="numeric" maxlength="8" class="pin-kutu"></label>
+      <label id="veli-pin2-alan">Şifre tekrar <input type="password" id="veli-pin2" inputmode="numeric" maxlength="8" class="pin-kutu"></label>
+      <div class="veli-hata" id="veli-hata"></div>
+    </div>
+    <div class="pencere-alt">
+      <span class="bosluk"></span>
+      <button type="button" class="dugme" id="veli-vazgec">Vazgeç</button>
+      <button type="submit" class="dugme ana-dugme">Tamam</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog class="pencere ck-pencere" id="ck-pencere">
+  <div class="pencere-ust hm-ust"><h2>✅ Cevap Kontrol</h2><button type="button" class="kapat-dugme" id="ck-kapat" title="Kapat">✕</button></div>
+  <div class="ck-ekran" id="ck-ekran">
+    <div class="ck-satir aktif" data-alan="islem"><span class="ck-etiket">İşlem</span><span class="ck-deger" id="ck-islem"></span></div>
+    <div class="ck-satir" data-alan="cevap"><span class="ck-etiket" id="ck-cevap-etiket">Cevabın</span><span class="ck-deger" id="ck-cevap"></span></div>
+    <div class="ck-satir" data-alan="kalan" id="ck-kalan-alan" hidden><span class="ck-etiket">Kalan</span><span class="ck-deger" id="ck-kalan"></span></div>
+  </div>
+  <div class="ck-sonuc" id="ck-sonuc" aria-live="polite"></div>
+  <div class="ck-tuslar" id="ck-tuslar"></div>
+  <small class="panel-not ck-sayac" id="ck-sayac"></small>
+</dialog>
+
+<dialog class="pencere kucuk-pencere" id="ad-pencere">
+  <form id="ad-form" autocomplete="off">
+    <div class="pencere-ust"><h2 id="ad-baslik">Ad</h2></div>
+    <div class="pencere-alanlar tek-sutun"><input id="ad-kutu" maxlength="100" class="ck-buyuk"></div>
+    <div class="pencere-alt"><span class="bosluk"></span>
+      <button type="button" class="dugme" id="ad-vazgec">Vazgeç</button>
+      <button type="submit" class="dugme ana-dugme">Tamam</button></div>
+  </form>
+</dialog>
+
+<dialog class="pencere" id="disari-pencere">
+  <div class="pencere-ust hm-ust"><h2>📄 Ders notu çıkar</h2><button class="kapat-dugme" id="disari-kapat" title="Kapat">✕</button></div>
+  <div class="pencere-alanlar tek-sutun">
+    <label>Ders <select id="disari-ders"></select></label>
+    <div class="disari-agac" id="disari-agac"></div>
+    <small class="panel-not" id="disari-sayac"></small>
+  </div>
+  <div class="pencere-alt">
+    <button type="button" class="dugme" id="disari-indir">⬇ HTML olarak indir</button>
+    <span class="bosluk"></span>
+    <button type="button" class="dugme ana-dugme" id="disari-onizle">🖨 Aç / Yazdır / PDF</button>
+  </div>
+</dialog>
+
+<dialog class="foto-pencere" id="foto-pencere"><img id="foto-buyuk" alt=""></dialog>
+
+<dialog class="oyun-pencere" id="oyun-pencere">
+  <div class="oyun-ust">
+    <button class="oyun-ust-tus" id="oyun-geri-tus" title="Geri" hidden>‹</button>
+    <div class="oyun-baslik" id="oyun-baslik"></div>
+    <div class="oyun-ilerleme" id="oyun-ilerleme" hidden><i></i></div>
+    <span class="oyun-deneme" title="Veli şifresi girili: oynanan sorular Arın'ın istatistiğine yazılmaz">🧪 Veli denemesi · kaydedilmez</span>
+    <button class="oyun-ust-tus" id="oyun-ses" title="Ses">🔊</button>
+    <button class="oyun-ust-tus" id="oyun-kapat" title="Kapat">✕</button>
+  </div>
+  <div class="oyun-alan" id="oyun-alan"></div>
+</dialog>
+
+<dialog class="pencere mesaj-pencere" id="mesaj-pencere">
+  <div class="pencere-ust hm-ust"><h2 id="mesaj-baslik">💬 Mesajlar</h2><button type="button" class="kapat-dugme" id="mesaj-kapat" title="Kapat">✕</button></div>
+  <div class="mesaj-listesi" id="mesaj-listesi"></div>
+  <form class="mesaj-yaz" id="mesaj-form" autocomplete="off">
+    <div class="mesaj-tur" id="mesaj-tur"><button type="button" data-tur="mesaj" class="aktif">💬 Mesaj</button><button type="button" data-tur="istek">🙋 İstek</button></div>
+    <div class="hizli-cevaplar" id="hizli-cevaplar"></div>
+    <div class="mesaj-giris"><textarea id="mesaj-kutu" rows="2" maxlength="1000" placeholder="Mesajını yaz…"></textarea>
+      <button type="submit" class="dugme ana-dugme">Gönder</button></div>
+  </form>
+</dialog>
+
+<div class="bildirim" id="bildirim" hidden></div>
+
+<dialog class="pencere kucuk-pencere" id="eslesme-pencere">
+  <div class="pencere-ust"><h2>Veli Paneli'ni eşleştir</h2></div>
+  <div class="pencere-alanlar tek-sutun">
+    <p class="veli-aciklama">Windows'ta <b>Veli Paneli</b>'ni aç, <b>Eşleştir</b>'e bas ve bu kodu yaz. Kod <span id="eslesme-sure">15 dakika</span> geçerli ve yalnız bir kez kullanılır.</p>
+    <div class="eslesme-kod" id="eslesme-kod">—</div>
+    <p class="veli-aciklama" id="eslesme-bilgi"></p>
+  </div>
+  <div class="pencere-alt"><span class="bosluk"></span><button type="button" class="dugme ana-dugme" id="eslesme-kapat">Tamam</button></div>
+</dialog>
+<script src="js/motor/planlayici.js"></script>
+<script src="js/motor/rapor.js"></script>
+<script src="js/motor/tohum_veri.js"></script>
+<script src="js/motor/cekirdek.js"></script>
+<script src="js/motor/depo.js"></script>
+<script src="js/motor/parcala.js"></script>
+<script src="js/vendor/firebase.js"></script>
+<script src="js/firebase_ayar.js"></script>
+<script src="js/bulut.js"></script>
+<script src="js/guvenlik.js"></script>
+<script src="js/program.js"></script>
+<script src="js/kayitlar.js"></script>
+<script src="js/sonuclar.js"></script>
+<script src="js/veli.js"></script>
+<script src="js/hesap.js"></script>
+<script src="js/araclar.js"></script>
+<script src="js/defter.js"></script>
+<script src="js/disari.js"></script>
+<script src="js/cep.js"></script>
+<script src="js/motivasyon.js"></script>
+<script src="js/rehber.js"></script>
+<script src="js/odevplan.js"></script>
+<script src="js/plan.js"></script>
+<script src="js/baglanti.js"></script>
+<script src="js/rapor.js"></script>
+<script src="js/mesaj.js"></script>
+<script src="js/muzik.js"></script>
+<script src="js/oyun/cekirdek.js"></script>
+<script src="js/oyun/matematik.js"></script>
+<script src="js/oyun/turkce.js"></script>
+<script src="js/oyun/mufredat.js"></script>
+<script src="js/oyun/dortislem.js"></script>
+<script src="js/oyun/icerik/matematik.js"></script>
+<script src="js/oyun/icerik/turkce.js"></script>
+<script src="js/oyun/icerik/sosyal.js"></script>
+<script src="js/oyun/icerik/ingilizce.js"></script>
+<script src="js/oyun/icerik/almanca.js"></script>
+<script src="js/oyun/icerik/fen.js"></script>
+<script src="js/oyun/icerik/din.js"></script>
+<script src="js/oyun/icerik/bilisim.js"></script>
+<script src="js/hazirlik/cizim.js"></script>
+<script src="js/hazirlik/hazirlik.js"></script>
+<script src="js/hazirlik/ingilizce_calisma.js"></script>
+<script src="js/hazirlik/almanca_calisma.js"></script>
+<script src="js/kelime.js"></script>
+<script src="js/ogren.js"></script>
+<script src="js/gelisim.js"></script>
+<script src="js/giris.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
