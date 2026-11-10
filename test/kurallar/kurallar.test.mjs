@@ -108,10 +108,12 @@ test("alıştırmalar ve günlük yalnız eklenir; günlüğü öğrenci okuyama
 test("hesapları yalnız yönetici yönetir", async () => {
   await assertFails(updateDoc(doc(db("u_veli"), `kisiler/${VELI}`), { ogrenciler: [ARIN, ELIF] }));
   await assertFails(updateDoc(doc(db("u_arin"), `kisiler/${ARIN}`), { rol: "yonetici" }));
-  await assertSucceeds(updateDoc(doc(db("u_yon"), `kisiler/${VELI}`), { ogrenciler: [ARIN, ELIF] }));
   await assertFails(getDocs(collection(db("u_veli"), "kisiler")));
   await assertSucceeds(getDoc(doc(db("u_veli"), `kisiler/${ARIN}`)));
   await assertFails(getDoc(doc(db("u_veli"), `kisiler/${ELIF}`)));
+  // yönetici Elif'i veliye atayınca veli Elif'i görür
+  await assertSucceeds(updateDoc(doc(db("u_yon"), `kisiler/${VELI}`), { ogrenciler: [ARIN, ELIF] }));
+  await assertSucceeds(getDoc(doc(db("u_veli"), `kisiler/${ELIF}`)));
 });
 test("ilk kurulum yalnız bir kez yapılır", async () => {
   await env.withSecurityRulesDisabled(async c => { /* temiz başlangıç */ await c.firestore(); });
