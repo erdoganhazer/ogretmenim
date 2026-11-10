@@ -25,10 +25,12 @@ const Bulut = (() => {
     const k = (e && e.code) || "";
     if (/invalid-credential|wrong-password|user-not-found|invalid-login/.test(k)) return "Kullanıcı adı ya da şifre yanlış";
     if (/too-many-requests/.test(k)) return "Çok fazla deneme oldu; birkaç dakika sonra yeniden dene";
-    if (/network|unavailable/.test(k)) return "İnternet bağlantısı yok";
+    if (/operation-not-allowed|password-login-disabled|configuration-not-found/.test(k + " " + ((e && e.message) || ""))) return "Firebase'de E-posta/Şifre girişi kapalı: Authentication › Sign-in method › Email/Password'ü aç";
+    if (/unauthorized-domain/.test(k)) return "Bu alan adı Firebase'de yetkili değil: Authentication › Settings › Authorized domains'e ekle";
+    if (/network|unavailable/.test(k)) return (typeof navigator !== "undefined" && navigator.onLine === false) ? "İnternet bağlantısı yok" : "Sunucuya ulaşılamadı (" + (k || "ağ") + ")";
     if (/weak-password/.test(k)) return "Şifre en az 6 karakter olmalı";
     if (/permission-denied/.test(k)) return "Bu işlem için yetkin yok";
-    return (e && e.message) || "Bir sorun oluştu";
+    return ((e && e.message) || "Bir sorun oluştu") + (k ? " (" + k + ")" : "");
   }
 
   /* ---------- giriş ---------- */
