@@ -9,6 +9,11 @@ let sonEtkinlik = Date.now();
 (() => {
   const asil = window.fetch.bind(window);
   window.fetch = (adres, secenek = {}) => {
+    // Yalnız kendi sitemize giden isteklere başlık eklenir. Başka sunuculara (Firebase vb.) özel başlık
+    // gönderilirse tarayıcının CORS denetimi isteği keser ve giriş "network-request-failed" ile düşer.
+    let ayniKaynak = true;
+    try { ayniKaynak = new URL(adres instanceof Request ? adres.url : String(adres), location.href).origin === location.origin; } catch (_) { /* göreli adres */ }
+    if (!ayniKaynak) return asil(adres, secenek);
     const basliklar = new Headers(secenek.headers || {});
     basliklar.set("X-OgretmeniM", "1");
     if (basliklar.has("X-Veli-Anahtar")) basliklar.set("X-Veli-Bosta", String(Math.max(0, Math.round((Date.now() - sonEtkinlik) / 1000))));

@@ -35,3 +35,9 @@
   ana sekmeler alt gezinme çubuğuna iner; ≤760 px'te tüm ızgaralar tek sütun, pencereler ekran genişliğinde, oyun/sınav penceresi tam ekran.
 - `index.html`: sekme yazıları simge + ad olarak ayrıldı (`.sk-ikon`, `.sk-ad`); Sınav provası düğmesi telefonda yalnız simge.
 - Denetim: sahte Firebase ile 360, 390, 820, 1024, 1280 px'te tüm sayfalar ve 8 dersin oyunları açıldı; yatay taşma yok, masaüstü görünümü aynı.
+
+## 10.11.2026 — Giriş "network-request-failed" düzeltmesi
+- Neden: `guvenlik.js` (eski yerel motor için) bütün fetch isteklerine `X-OgretmeniM` başlığı ekliyordu. Firebase Auth bu başlığa CORS izni vermediği
+  için tarayıcı isteği kesiyordu (Firestore fetch kullanmadığı için etkilenmedi). Artık başlık yalnız aynı kaynağa giden isteklere ekleniyor.
+- Doğrulama: gerçek Firebase'e, var olmayan hesapla giriş denemesi — eski kod `auth/network-request-failed`, yeni kod `auth/invalid-credential`.
+- Not: sahte Firebase ile yapılan arayüz denemeleri bunu yakalayamaz; giriş akışı gerçek projeyle de denenmeli.
