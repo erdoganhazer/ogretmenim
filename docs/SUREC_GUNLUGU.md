@@ -29,3 +29,9 @@
 - Proje `erdoganhazer/ogretmenim` deposuna yüklendi. Web: `yayin.yml` main'deki `web/` klasörünü GitHub Pages'e yayınlar (Settings › Pages › Source: GitHub Actions gerekir).
 - `kurallar.yml`'e `yayinla` işi eklendi: testler yeşilse ve dal main ise `firebase deploy --only firestore:rules` (`FIREBASE_SERVICE_ACCOUNT` sırrı, google-github-actions/auth).
   Artık kuralları konsola elle yapıştırmak gerekmiyor; `firebase.json` değişikliği de iş akışını tetikler.
+
+## 10.11.2026 — Telefon ve tablet görünümü
+- `tema.css` sonuna iki blok: ≤1023 px'te sayfa doğal kayar (eskiden gövde sabit yükseklikteydi, içerik kesiliyordu), üst şerit yapışkan ve sığar,
+  ana sekmeler alt gezinme çubuğuna iner; ≤760 px'te tüm ızgaralar tek sütun, pencereler ekran genişliğinde, oyun/sınav penceresi tam ekran.
+- `index.html`: sekme yazıları simge + ad olarak ayrıldı (`.sk-ikon`, `.sk-ad`); Sınav provası düğmesi telefonda yalnız simge.
+- Denetim: sahte Firebase ile 360, 390, 820, 1024, 1280 px'te tüm sayfalar ve 8 dersin oyunları açıldı; yatay taşma yok, masaüstü görünümü aynı.

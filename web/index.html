@@ -2,7 +2,8 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1B2A3B">
 <title>ÖğretmeniM</title>
 <link rel="icon" href="img/ikon.png">
 <link rel="stylesheet" href="css/tema.css">
@@ -36,12 +37,12 @@
     <span class="marka-yazi"><span class="marka-ad">Öğretmen<b>iM</b></span><small class="marka-surum" id="marka-surum" title="Kurulu sürüm"></small></span>
   </div>
   <nav class="sekmeler" id="sekmeler">
-    <button data-sayfa="ana" class="aktif">🏠 Bugün</button>
-    <button data-sayfa="plan">✏️ Çalışma Masam</button>
-    <button data-sayfa="ogren">🎯 Öğren</button>
-    <button data-sayfa="defterler">📒 Defterim</button>
+    <button data-sayfa="ana" class="aktif"><span class="sk-ikon">🏠</span> <span class="sk-ad">Bugün</span></button>
+    <button data-sayfa="plan"><span class="sk-ikon">✏️</span> <span class="sk-ad">Çalışma Masam</span></button>
+    <button data-sayfa="ogren"><span class="sk-ikon">🎯</span> <span class="sk-ad">Öğren</span></button>
+    <button data-sayfa="defterler"><span class="sk-ikon">📒</span> <span class="sk-ad">Defterim</span></button>
   </nav>
-  <button class="prova-dugme" id="prova-ac" type="button" title="Sınav provası — istediğin zaman">🎯 Sınav provası</button>
+  <button class="prova-dugme" id="prova-ac" type="button" title="Sınav provası — istediğin zaman" aria-label="Sınav provası">🎯<span class="prova-yazi"> Sınav provası</span></button>
   <div class="oturum-kutu" id="oturum-kutu">
     <button type="button" class="oturum-ad" id="oturum-ad" title="Hesap"></button>
     <div class="oturum-menu" id="oturum-menu" hidden>

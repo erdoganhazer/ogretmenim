@@ -39,6 +39,7 @@ async function sayfaAc(ad) {
   if (ad === "ogren" && typeof ogrenCiz === "function") ogrenCiz();
   $$(".sayfa").forEach(s => s.classList.toggle("aktif", s.id === "sayfa-" + ad));
   $(".sayfalar").scrollTop = 0;
+  window.scrollTo(0, 0);                                   // telefonda sayfanın kendisi kayar
   if (ad === "ayarlar") { $("#surum-yazi").textContent = "Sürüm " + (durum.surum || ""); veliAyarlariniCiz(); }
   if (ad === "cep") cepCiz();
   if (ad === "program") programSayfasiCiz();
