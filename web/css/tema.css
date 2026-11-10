@@ -2037,3 +2037,12 @@ body.cizelgesiz .govde { grid-template-columns: minmax(0, 1fr); }
   .ogren-sekmeler::-webkit-scrollbar { display: none; }
   .ogren-sekmeler button { padding: 8px 14px; font-size: 14px; white-space: nowrap; flex: none; }
 }
+
+/* ---------- Yüklenebilir uygulama (PWA) ---------- */
+.giris-yukle { display: block; margin: 14px auto 0; font-size: 15px; }
+.yukle-pencere { width: min(460px, calc(100vw - 16px)); }
+.yukle-adimlar { margin: 8px 0 0; padding: 0 20px 0 42px; display: grid; gap: 10px; line-height: 1.5; }
+.yukle-simge { display: inline-grid; place-items: center; width: 26px; height: 26px; border: 1px solid var(--cizgi); border-radius: 6px; margin-left: 4px; font-size: 15px; }
+.yukle-not { padding: 10px 20px 0; }
+/* Yüklü uygulama olarak açılınca sayfayı aşağı çekmek uygulamayı yenilemesin */
+@media (display-mode: standalone) { body { overscroll-behavior-y: none; } }

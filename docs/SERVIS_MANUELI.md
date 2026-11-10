@@ -16,6 +16,13 @@
   ("serviceusage" yetki hatası verirse *Service Usage Consumer* da eklenir). JSON'un tamamı depo › Settings › Secrets and variables › Actions › New repository secret › ad: `FIREBASE_SERVICE_ACCOUNT`.
 - **Firebase Authentication › Settings › Authorized domains:** `erdoganhazer.github.io` ekli olmalı.
 
+## Uygulamayı yükleme
+- **Android (Chrome/Samsung):** siteyi aç › menü ya da giriş ekranındaki **📲 Uygulamayı yükle** › Yükle. Simge ana ekrana gelir.
+- **iPhone/iPad:** Safari › Paylaş › **Ana Ekrana Ekle** (uygulamadaki 📲 düğmesi adımları gösterir). Ana ekrandan ilk açışta bir kez giriş gerekir.
+- **Bilgisayar (Chrome/Edge):** adres çubuğundaki yükleme simgesi ya da hesap menüsündeki 📲. Uygulama kendi penceresinde açılır.
+- Güncelleme kendiliğinden: her yayında `sw.js`'ye sürüm yazılır (`araclar/sw_damgala.py`), uygulama yeni sürümü indirip yenilenir
+  (açık bir pencere varsa uygulamadan çıkınca). Eski sürümde takılı kalırsa: uygulamayı kapatıp yeniden aç.
+
 ## Sorun giderme
 - Actions'ta `yayinla` "FIREBASE_SERVICE_ACCOUNT sırrı tanımlı değil" diyorsa sır eklenmemiş; "PERMISSION_DENIED" diyorsa hizmet hesabının rolü eksik.
 - "Bu işlem için yetkin yok": kurallar yayınlanmamış ya da hesap öğrenciye atanmamış.

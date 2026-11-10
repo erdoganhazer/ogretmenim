@@ -41,3 +41,12 @@
   için tarayıcı isteği kesiyordu (Firestore fetch kullanmadığı için etkilenmedi). Artık başlık yalnız aynı kaynağa giden isteklere ekleniyor.
 - Doğrulama: gerçek Firebase'e, var olmayan hesapla giriş denemesi — eski kod `auth/network-request-failed`, yeni kod `auth/invalid-credential`.
 - Not: sahte Firebase ile yapılan arayüz denemeleri bunu yakalayamaz; giriş akışı gerçek projeyle de denenmeli.
+
+## 10.11.2026 — Aşama 5: yüklenebilir uygulama (PWA)
+- `manifest.webmanifest` (ad her yerde ÖğretmeniM), simgeler `img/uygulama-*.png` (maskable dahil), iPhone için `apple-touch-icon` ve meta etiketleri.
+- `sw.js`: yayında sürüm + dosya listesiyle damgalanır; sitenin dosyalarını önbelleğe alır, Firebase'e dokunmaz; eski önbelleği siler.
+  Yerelde damgasız olduğu için hiçbir şey önbelleğe almaz.
+- `js/uygulama.js`: kayıt, yeni sürümde kendiliğinden yenileme (açık pencere varken beklenir), "📲 Uygulamayı yükle" (Android/masaüstü yükleme
+  penceresi, iPhone'da adım adım yardım).
+- Denendi: manifest okunuyor, 66 dosya önbellekte, internet kesikken uygulama açılıyor, yeni sürüm yayınlanınca önbellek değişip sayfa yenileniyor,
+  iPhone görünümünde yardım penceresi açılıyor.

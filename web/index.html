@@ -5,7 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1B2A3B">
 <title>ÖğretmeniM</title>
-<link rel="icon" href="img/ikon.png">
+<meta name="application-name" content="ÖğretmeniM">
+<meta name="description" content="Ödevlerin, derslerin ve defterlerin hep yanında.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="img/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="img/uygulama-192.png" sizes="192x192" type="image/png">
+<!-- iPhone / iPad: ana ekrana eklenince adı, simgesi ve tam ekran görünümü -->
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="ÖğretmeniM">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="format-detection" content="telephone=no">
 <link rel="stylesheet" href="css/tema.css">
 </head>
 <body>
@@ -21,6 +32,7 @@
     <label id="giris-sifre2-alan" hidden>Şifre tekrar <input type="password" id="giris-sifre2" maxlength="64" autocomplete="new-password"></label>
     <div class="giris-hata" id="giris-hata" role="alert"></div>
     <button type="submit" class="dugme ana-dugme giris-dugme" id="giris-dugme">Giriş</button>
+    <button type="button" class="baglanti giris-yukle" data-uygulama-yukle hidden>📲 Uygulamayı yükle</button>
   </form>
   <div class="giris-kart giris-secim" id="giris-secim" hidden>
     <h2>Hangi öğrenci?</h2>
@@ -49,6 +61,7 @@
       <div class="oturum-kim" id="oturum-kim"></div>
       <button type="button" id="oturum-ogrenci-degistir" hidden>🔁 Öğrenci değiştir</button>
       <button type="button" id="oturum-hesaplar" hidden>👥 Hesapları yönet</button>
+      <button type="button" data-uygulama-yukle hidden>📲 Uygulamayı yükle</button>
       <button type="button" id="oturum-sifre">🔑 Şifremi değiştir</button>
       <button type="button" id="oturum-cikis">🚪 Çıkış</button>
     </div>
@@ -643,5 +656,6 @@
 <script src="js/gelisim.js"></script>
 <script src="js/giris.js"></script>
 <script src="js/app.js"></script>
+<script src="js/uygulama.js"></script>
 </body>
 </html>

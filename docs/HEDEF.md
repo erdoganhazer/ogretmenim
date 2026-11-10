@@ -12,4 +12,4 @@ Arın'ın ev çalışma uygulamasını, Hazer'in bilgisayarına bağlı olmadan,
 
 ## Aşamalar
 1. GitHub + Firebase ✓  2. Motor tarayıcıya ✓  3. Giriş, roller, yönetici, kurallar ✓ (kural testleri CI'da)
-4. Veli görünümü, ders sayfası, Notlarım  5. PWA, çevrimdışı, otomatik açılış  6. Yedekten aktarım + rapor + arşiv  7. Yan yana deneme ve geçiş
+4. Veli görünümü, ders sayfası, Notlarım  5. PWA, çevrimdışı ✓ (otomatik açılış kaldı)  6. Yedekten aktarım + rapor + arşiv  7. Yan yana deneme ve geçiş
