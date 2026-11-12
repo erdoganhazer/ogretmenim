@@ -35,13 +35,25 @@
 ## Mesajlar ve bildirim gönderme
 - **Aile sohbeti** (öğrenci ↔ veliler): üstteki 💬. **Veliler arası özel sohbet:** 💬 › kişiler satırında öbür velinin adı. Öğrenci yalnız aile sohbetini görür.
 - **Yönetici bildirimi:** 💬 › **📣 Bildirim gönder** › kişileri seç › mesaj › Gönder. Listede 🔔 olanların bildirimi açık bir cihazı var.
-- Her mesaj ve bildirim `bildirim_kuyrugu`'na düşer; Actions › **"Mesaj bildirimleri"** 5 dakikada bir gönderir (GitHub yoğunken birkaç dakika gecikebilir).
-  Elle deneme: Run workflow › kuru = 1 (göndermez, silmez, günlüğe yazar). Bir kişiye deneme bildirimi: Run workflow › deneme = kullanıcı adı (ör. hazer). Gönderilen kayıt silinir; 2 günden eski takılı kayıt temizlenir.
+- Her mesaj ve bildirim `bildirim_kuyrugu`'na düşer; Firebase fonksiyonu **kuyrukGonder** hemen gönderir ve kaydı siler.
+  Elle: Actions › "Mesaj bildirimleri" › Run workflow (kuru = 1: göndermez; deneme = kullanıcı adı: o kişiye deneme bildirimi). Gönderilen kayıt silinir; 2 günden eski takılı kayıt temizlenir.
 - **Öğrenci de mesaj bildirimi alabilir:** öğrenci girişi › ⚙️ Ayarlar › 🔔 Mesaj bildirimleri › Bildirimleri aç.
 - Kişi listesi aynı ailedeki hesaplardan oluşur (`aile` alanı). İlk sürümde açılan yönetici kaydına aile girişte kendiliğinden yazılır;
   eksik kalan hesaplar yönetici "Hesapları yönet"i açınca tamamlanır.
-- Gönderim izni: sunucu (`araclar/bildirim/alicilar.mjs`) ayrıca denetler: veli → kendi öğrencisi ya da aynı ailenin velisi; öğrenci → kendi velileri;
+- Gönderim izni: sunucu (`functions/ortak/alicilar.mjs`) ayrıca denetler: veli → kendi öğrencisi ya da aynı ailenin velisi; öğrenci → kendi velileri;
   duyuru yalnız yöneticiden. Testi: `node --test test/alicilar_test.mjs`.
+
+## Firebase fonksiyonları ve kota uyarısı
+- Fonksiyonlar (`functions/`): **kuyrukGonder** (mesaj/duyuru/ödev bildirimi anında), **gunlukUyarilar** (30 dakikada bir veli uyarıları),
+  **butceUyarisi** (bütçe eşiği aşılınca yöneticilere 🔔 + telefon). Ortak mantık `functions/ortak/`. `functions/` main'e gelince
+  Actions › "Firebase fonksiyonları" yükler (Firestore bölgesini kendisi bulur).
+- **Kurulum (bir kez):**
+  1. Firebase › proje › sol altta plan › **Blaze**'e geç (kart). Ücretsiz kota aynen geçerli; aşılmadıkça ücret yok.
+  2. Google Cloud › IAM › `firebase-adminsdk-…` hizmet hesabına **Editor** ve **Project IAM Admin** rolleri.
+  3. Actions › "Firebase fonksiyonları" › Run workflow (ilk yüklemede Google bir izin hatası verirse birkaç dakika sonra yeniden çalıştır).
+  4. Google Cloud › Faturalandırma › **Bütçeler ve uyarılar** › Bütçe oluştur: proje ogretmenim-d0524, tutar 1 USD (≈ ücretsiz kotanın üstündeki ilk harcama),
+     eşikler %50 / %90 / %100, e-posta uyarısı açık, **"Pub/Sub konusuna bağla" → `butce-uyari`**. Böylece eşik aşılınca yöneticiye zil + telefon bildirimi gelir.
+- Maliyet sınırı: her fonksiyon en çok 2 örnek, 256 MB.
 
 ## Bildirim zili (🔔)
 - Üst şeritte; okunmamış sayısını gösterir. Mesaj, duyuru, "ödev bitti" ve günlük veli uyarıları burada listelenir; açınca okundu sayılır.

@@ -1,8 +1,7 @@
 name: Mesaj bildirimleri
-# 5 dakikada bir: uygulamanın bildirim_kuyrugu'na bıraktığı mesaj ve duyuru bildirimlerini gönderir (araclar/bildirim/mesaj_gonder.mjs).
-# Not: GitHub zamanlanmış işleri yoğunlukta birkaç dakika geciktirebilir; depoda 60 gün değişiklik olmazsa durdurur (Actions › Enable workflow).
+# Bildirim kuyruğunu ELLE işleme ve kişiye deneme bildirimi. Asıl iş Firebase fonksiyonunda (kuyrukGonder, kayıt düşer düşmez).
+# deneme = kullanıcı adı ya da ad → o kişinin cihazlarına deneme bildirimi. kuru = 1 → göndermez.
 on:
-  schedule: [{ cron: "*/5 * * * *" }]
   workflow_dispatch:
     inputs:
       kuru: { description: "Göndermeden dene (1)", default: "0" }

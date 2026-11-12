@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { uyarilariHesapla } from "../araclar/bildirim/uyarilar.mjs";
+import { uyarilariHesapla } from "../functions/ortak/uyarilar.mjs";
 const temel = { ad: "Arın", bugun: "2026-11-12", saat: 20, etkinlikler: [], notlar: {}, mesajlar: [], dersler: { m: "Matematik", f: "Fen" }, planGunler: {} };
 let r = uyarilariHesapla({ ...temel, odevler: [{ id: "o1", ders_id: "m", teslim: "2026-11-13", bitti: false }] });
 assert.deepStrictEqual(r.uyarilar.map(u => u.anahtar), ["plan:2026-11-12", "yarin:o1"]);

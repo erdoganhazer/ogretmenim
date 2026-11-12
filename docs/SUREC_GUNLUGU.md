@@ -114,3 +114,12 @@
 - Kurallar 20/20, alıcı testi 7/7. Uçtan uca (sahte Firebase, telefon boyutu): duyuru öğrencinin zilinde, ödev bitince velinin zilinde, açınca okundu.
 - **Açık sorun:** GitHub zamanlanmış işleri (bildirim.yml, mesaj_bildirim.yml) kurulduğundan beri hiç kendiliğinden çalışmadı; telefon bildirimleri yalnız
   elle başlatınca gitti. Zil bundan etkilenmez.
+
+## 12.11.2026 — Firebase fonksiyonları (GitHub zamanlayıcısı yerine)
+- GitHub zamanlanmış işleri hiç tetiklenmedi; karar: Firebase Blaze + Cloud Functions (2. nesil). `functions/index.js`:
+  `kuyrukGonder` (Firestore oluşturma tetikleyicisi, anında), `gunlukUyarilar` (onSchedule 30 dk, Europe/Istanbul), `butceUyarisi` (Pub/Sub `butce-uyari`).
+- Ortak mantık `functions/ortak/` (alicilar, uyarilar, gonderim); `araclar/bildirim/*.mjs` yalnız elle çalıştırma için ince sarmalayıcı.
+  GitHub'daki iki iş artık zamanlanmış değil, yalnız elle (deneme/kuru).
+- Bütçe uyarısı: aynı ay aynı eşik bir kez (`sistem/butce.uyarilan`); yöneticilerin gelen kutusuna + cihazlarına.
+- Emülatörde denendi (firestore+functions+pubsub): kuyruk kaydı tetikleyiciyle işlenip silindi; bütçe mesajı iki kez gelse de yöneticiye tek bildirim.
+- Yükleme: `.github/workflows/fonksiyonlar.yml` (Firestore bölgesini okuyup `functions/.env`'e FONK_BOLGE yazar). Blaze ve roller kullanıcıda.

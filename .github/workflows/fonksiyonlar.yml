@@ -1,0 +1,30 @@
+name: Firebase fonksiyonları
+# functions/ değişince (ya da elle) Firebase'e yükler: anlık bildirim (kuyrukGonder), günlük veli uyarıları (gunlukUyarilar), bütçe uyarısı (butceUyarisi).
+# Gerekenler: proje Blaze planında; FIREBASE_SERVICE_ACCOUNT hesabında "Editor" ve "Project IAM Admin" rolleri (bkz. docs/SERVIS_MANUELI.md).
+on:
+  push: { branches: [main], paths: ["functions/**", "firebase.json", ".github/workflows/fonksiyonlar.yml"] }
+  workflow_dispatch:
+permissions: { contents: read }
+concurrency: { group: fonksiyonlar, cancel-in-progress: false }
+jobs:
+  yukle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: google-github-actions/auth@v2
+        with: { credentials_json: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" }
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Firestore bölgesini bul (fonksiyonlar aynı bölgede çalışmalı)
+        run: |
+          KONUM=$(curl -sS -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+            "https://firestore.googleapis.com/v1/projects/ogretmenim-d0524/databases/(default)" | jq -r '.locationId // empty')
+          case "$KONUM" in nam5) B=us-central1 ;; eur3) B=europe-west1 ;; "") echo "::error::Firestore bölgesi okunamadı"; exit 1 ;; *) B="$KONUM" ;; esac
+          echo "Firestore: $KONUM → fonksiyon bölgesi: $B"
+          echo "FONK_BOLGE=$B" > functions/.env
+      - run: npm ci --no-audit --no-fund
+        working-directory: functions
+      - name: Fonksiyonları yükle
+        run: npx --yes firebase-tools@13.29.1 deploy --only functions --project ogretmenim-d0524 --force --non-interactive

@@ -164,8 +164,8 @@ async function duyuruGonder(e) {
   if (!metin) return;
   try {
     for (const id of secilen) await Bulut.bildirimKuyruga(ben, { hedef: { kisi: id }, baslik: "📣 " + baslik, metin, tur: "duyuru" });
-    f.reset(); $("#duyuru-durum").textContent = `${secilen.length} kişiye sıraya alındı; en çok 5 dakika içinde gider.`;
-    bildir("Bildirim sıraya alındı 📣");
+    f.reset(); $("#duyuru-durum").textContent = `${secilen.length} kişiye gönderildi.`;
+    bildir("Bildirim gönderildi 📣");
   } catch (h) { bildir(h.message, true); }
 }
 

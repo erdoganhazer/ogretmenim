@@ -1,8 +1,7 @@
 name: Veli bildirimleri
-# Yarım saatte bir: seçtiği saati geçmiş ve bugün bildirim almamış velilere, öğrencinin gününde eksik varsa bildirim gider.
-# Not: GitHub, depoda 60 gün hiç değişiklik olmazsa zamanlanmış işleri durdurur; Actions sekmesinden yeniden açılır.
+# Günlük veli uyarılarını ELLE çalıştırma. Asıl iş Firebase fonksiyonunda (gunlukUyarilar, 30 dakikada bir).
+# Saati geçmiş ve bugün bildirim almamış velilere, öğrencinin gününde eksik varsa bildirim gider. Deneme: kuru = 1.
 on:
-  schedule: [{ cron: "7,37 * * * *" }]
   workflow_dispatch:
     inputs:
       kuru: { description: "Göndermeden dene (1)", default: "0" }

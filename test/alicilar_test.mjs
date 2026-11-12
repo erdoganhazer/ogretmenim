@@ -1,7 +1,7 @@
 /* Bildirim alıcılarının seçimi ve ilişki denetimi: node --test test/alicilar_test.mjs */
 import { test } from "node:test";
 import assert from "node:assert";
-import { alicilariBul } from "../araclar/bildirim/alicilar.mjs";
+import { alicilariBul } from "../functions/ortak/alicilar.mjs";
 
 const K = {
   hazer: { id: "hazer", rol: "yonetici", aktif: true, aile: "a1", ogrenciler: ["arin"] },

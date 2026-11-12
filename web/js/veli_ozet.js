@@ -1,6 +1,6 @@
 /* ÖğretmeniM web — veli ana sayfası (Özet).
    "Bugün her şey yolunda mı · bir şey yapmam gerekiyor mu · bu hafta nasıl gitti" sorularına tek ekranda cevap.
-   Uyarılar bildirim sistemiyle aynı anahtarları kullanır (araclar/bildirim/uyarilar.mjs); "Haberim var" denen uyarı
+   Uyarılar bildirim sistemiyle aynı anahtarları kullanır (functions/ortak/uyarilar.mjs); "Haberim var" denen uyarı
    o gün için ne Özet'te ne bildirimde tekrar çıkar. */
 "use strict";
 
