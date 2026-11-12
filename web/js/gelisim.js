@@ -100,22 +100,12 @@ function yaziliHazirlikHtml(yz, kacis) {
 function kelimeDefteriHtml(kz, kacis) {
   const e = kacis;
   if (!kz || !kz.defterler || !kz.defterler.length) return "";
-  const MOD = { anlam: "anlamını bulma", kelime: "kelimeyi bulma", esles: "eşleştirme", yazim: "yazma", artikel: "artikel" };
-  const durum = x => x.kutu >= 4 ? `<span style="color:#22C55E">✓ öğrendi</span>` : x.deneme ? `<span style="color:#F59E0B">çalışıyor</span>` : `<span class="gl-soluk">yeni</span>`;
   return `<div class="gl-yz"><h4 class="gl-yz-baslik">📚 Kelime Defterim <small>Öğrendi = son cevaplarının art arda en az 4'ü doğru · yanlışta kelime başa döner</small></h4>
     <div class="gl-yz-kartlar">${kz.defterler.map(d => `<div class="gl-yz-kart">
       <b>${e(d.simge || "")} ${e(d.ad)}</b><small>${d.kelime} kelime</small>
       <span>${gelisimCubuk(d.kelime ? Math.round(100 * d.ogrendi / d.kelime) : 0)} <b>${d.ogrendi}</b> öğrendi</span>
       <small>${d.calisiyor} çalışıyor · ${d.yeni} yeni${d.oran != null ? ` · doğruluk %${d.oran}` : ""}</small></div>`).join("")}</div>
-    ${kz.defterler.filter(d => d.deneme).map(d => `<details class="gl-ders-kutu">
-      <summary><b>${e(d.simge || "")} ${e(d.ad)}</b> ${gelisimCubuk(d.oran)} <span class="gl-oran" style="color:${gelisimRenk(d.oran)}">%${d.oran}</span>
-        <small>${d.deneme} cevap · ${d.ogrendi}/${d.kelime} öğrendi</small></summary>
-      ${d.zor.length ? `<div class="gl-sorular"><h5>Zorlandığı kelimeler</h5><ul>${d.zor.map(x => `<li><b>${e(x.kelime)}</b> = ${e(x.anlam)} — %${x.oran} (${x.deneme} cevap)${x.yanlis_cevap.length ? `; karıştırdığı: ${x.yanlis_cevap.map(c => `<code>${e(c)}</code>`).join(", ")}` : ""}</li>`).join("")}</ul></div>` : ""}
-      <table class="gl-tablo"><thead><tr><th>Kelime</th><th>Anlamı</th><th>Grup</th><th>Durum</th><th>Doğruluk</th><th>Oyuna göre</th></tr></thead><tbody>
-        ${d.kelimeler.slice().sort((a, b) => (b.deneme > 0) - (a.deneme > 0) || (a.oran ?? 101) - (b.oran ?? 101)).map(x => `<tr><td><b>${e(x.kelime)}</b></td><td>${e(x.anlam)}</td><td><small>${e(x.grup || "")}</small></td>
-          <td>${durum(x)}</td><td>${x.oran == null ? "—" : `<span style="color:${gelisimRenk(x.oran)}">%${x.oran}</span><small> · ${x.deneme}</small>`}</td>
-          <td><small>${Object.entries(x.modlar || {}).map(([m, v]) => `${MOD[m] || m} %${v}`).join(" · ")}</small></td></tr>`).join("")}
-      </tbody></table></details>`).join("")}</div>`;
+    <p class="panel-not">Kelime kelime ayrıntı gösterilmez: uygulama takıldığı kelimeleri kendisi bilir ve onları daha sık sorar.</p></div>`;
 }
 /* GELISIM_ORTAK_BIT */
 

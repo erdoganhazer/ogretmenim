@@ -36,6 +36,7 @@ for (const s of satirlar) {
   if (js) {
     if (js.durum !== s.durum_kodu) f.push(`durum ${s.durum_kodu} ≠ ${js.durum}`);
     if (s.yol.startsWith("rapor") && s.cevap) { delete s.cevap.olusturma; delete js.govde.olusturma; }
+    if (s.yol === "kelime" && js.govde) delete js.govde.zor;                       // web: takılınan kelimeler
     if (s.yol === "veri" && js.govde) { delete js.govde.icerik; if (js.govde.koleksiyonlar) delete js.govde.koleksiyonlar.ders_notlari; }   // web'e özgü alanlar
     const pyMesaj = s.cevap && s.cevap.hata;
     if (!(pyMesaj && PY_HATA.test(pyMesaj))) fark(s.cevap, js.govde, "cevap", f);

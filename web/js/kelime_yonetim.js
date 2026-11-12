@@ -51,7 +51,7 @@ async function kelimeYonetimCiz() {
     const w = KY.duzenlenen ? ks.find(k => k.id === KY.duzenlenen) : null;
     const dur = s => !s || !s.deneme ? `<span class="ky-yeni">yeni</span>` : s.kutu >= 4 ? `<span class="ky-ogrendi">✓ öğrendi</span>` : `<span class="ky-calisiyor">çalışıyor</span>`;
     const ogr = ks.filter(k => (istat[k.id] || {}).kutu >= 4).length;
-    sag = `<div class="kd-p-ust"><h3>${esc(dft.simge || "📘")} ${esc(dft.ad)} <small>${KY_DIL[dft.dil] || ""} · ${ks.length} kelime · ${ad} ${ogr} kelimeyi öğrendi</small></h3>
+    sag = `<div class="kd-p-ust"><h3>${esc(dft.simge || "📘")} ${esc(dft.ad)} <small>${KY_DIL[dft.dil] || ""} · ${ks.length} kelime</small></h3>
         <button type="button" class="dugme kucuk" data-ky-defter-duzenle="${esc(dft.id)}">⚙️ Defteri düzenle</button>
         <button type="button" class="dugme kucuk" data-ky-toplu>${KY.toplu ? "Tek tek ekle" : "📥 Toplu ekle"}</button></div>
       ${dft.aciklama ? `<p class="panel-not">${esc(dft.aciklama)}</p>` : ""}
@@ -70,13 +70,12 @@ async function kelimeYonetimCiz() {
           <span class="ky-dugmeler">${w ? `<button type="button" class="dugme" data-ky-vazgec>Vazgeç</button>` : ""}<button class="dugme ana-dugme">${w ? "Kaydet" : "➕ Ekle"}</button></span>
         </form>`}
       <datalist id="ky-gruplar">${gruplar.filter(Boolean).map(g => `<option value="${esc(g)}">`).join("")}</datalist>
-      <div class="ky-tablo-kap"><table class="kd-p-tablo"><thead><tr><th></th><th>Kelime</th><th>Anlamı</th><th>Durum</th><th>Doğruluk</th><th></th></tr></thead><tbody>
-      ${gruplar.map(g => `<tr class="kd-p-grup"><td colspan="6">${esc(g || "Grupsuz")}</td></tr>${ks.filter(k => (k.grup || "") === g).map(k => {
+      <div class="ky-tablo-kap"><table class="kd-p-tablo"><thead><tr><th></th><th>Kelime</th><th>Anlamı</th><th></th></tr></thead><tbody>
+      ${gruplar.map(g => `<tr class="kd-p-grup"><td colspan="4">${esc(g || "Grupsuz")}</td></tr>${ks.filter(k => (k.grup || "") === g).map(k => {
         const s = istat[k.id];
         return `<tr><td>${esc(k.emoji || "")}</td><td><b>${esc((k.artikel ? k.artikel + " " : "") + k.kelime)}</b>${k.ornek ? `<br><small>${esc(k.ornek)}</small>` : ""}</td><td>${esc(k.anlam)}</td>
-          <td>${dur(s)}</td><td>${s && s.deneme ? `%${s.oran} <small>· ${s.deneme} cevap</small>` : "—"}</td>
           <td class="ky-islem"><button type="button" class="dugme kucuk" data-ky-duzenle="${esc(k.id)}" title="Düzenle">✏️</button> <button type="button" class="dugme kucuk" data-ky-sil="${esc(k.id)}" title="Sil">🗑</button></td></tr>`;
-      }).join("")}`).join("") || `<tr><td colspan="6" class="gl-bos">Bu defterde henüz kelime yok.</td></tr>`}
+      }).join("")}`).join("") || `<tr><td colspan="4" class="gl-bos">Bu defterde henüz kelime yok.</td></tr>`}
       </tbody></table></div>`;
   }
   kap.innerHTML = `<div class="kd-p">${sol}<div class="ky-sag">${sag}</div></div>`;

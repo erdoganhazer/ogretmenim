@@ -15,7 +15,7 @@ function veliUyarilari(plan) {
   const yaklasan = odevler.some(o => !o.bitti && o.teslim <= tarihStr(gunEkle(new Date(), 2)));
   if (gunO && gunO.planlanan > 0 && saat >= 17 && gunO.yapilan < gunO.planlanan * 0.9) {
     const kalan = ((plan.gunler && plan.gunler[0] && plan.gunler[0].gorevler) || []).map(g => dersAdiBul((odevler.find(o => o.id === g.odev_id) || {}).ders_id));
-    u.push({ anahtar: `plan:${bugun}`, tur: "uyari", metin: `${ad} bugünkü planın %${Math.round(100 * gunO.yapilan / gunO.planlanan)}'ini yaptı`,
+    u.push({ anahtar: `plan:${bugun}`, tur: "uyari", metin: `${ad}: bugünkü planın %${Math.round(100 * gunO.yapilan / gunO.planlanan)} kadarı yapıldı`,
       alt: kalan.length ? "Kalan: " + [...new Set(kalan)].join(", ") : "" });
   } else if (saat >= 17 && !(gunO && (gunO.biten || gunO.yarim)) && yaklasan) {
     u.push({ anahtar: `plan:${bugun}`, tur: "uyari", metin: `${ad} bugün hiç çalışma işaretlemedi`, alt: "Teslimi yaklaşan ödev var" });
@@ -63,7 +63,7 @@ async function veliOzetCiz() {
   const oran = gunO.planlanan ? Math.min(100, Math.round(100 * (gunO.yapilan || 0) / gunO.planlanan)) : null;
   const renk = geciken ? "kirmizi" : oran !== null && oran < 50 && new Date().getHours() >= 17 ? "sari" : "yesil";
   const cumle = geciken ? `${geciken} ödevin teslimi geçti.` : oran === null ? (gunO.biten ? "Bugün çalıştı." : "Bugün henüz çalışma işaretlenmedi.")
-    : oran >= 90 ? "Bugünkü plan bitti 👏" : `Bugünkü planın %${oran}'i yapıldı.`;
+    : oran >= 90 ? "Bugünkü plan bitti 👏" : oran === 0 ? "Bugünkü plana henüz başlanmadı." : `Bugünkü plan: %${oran} yapıldı.`;
   $("#oz-durum").innerHTML = `<div class="oz-serit ${renk}"><span class="oz-isik"></span><b>${esc(cumle)}</b>
     <span class="oz-sayilar"><span><b>${gunO.biten || 0}</b> iş bitti</span><span><b>${acik}</b> açık ödev</span>${gunO.zor ? `<span><b>${gunO.zor}</b> kez zorlandı</span>` : ""}</span></div>`;
 

@@ -20,6 +20,7 @@ async function kdYukle() {
     const acik = new Set(kd.defterler.map(d => d.id));
     kd.kelimeler = kel.filter(k => acik.has(k.defter_id));
     kd.kutu = oz.kutu || {};
+    kd.zor = new Set(oz.zor || []);
   } catch (_) { return; }
   for (const d of kd.defterler) {
     const kod = kdKod(d);
@@ -122,7 +123,8 @@ function kdCtx(d, ad) {
 }
 function kdAgirlik(w) {
   const k = kd.kutu[w.id];
-  return k == null ? 2.5 : [2.5, 3, 2, 1.2, 0.6, 0.3][k];
+  const temel = k == null ? 2.5 : [2.5, 3, 2, 1.2, 0.6, 0.3][k];
+  return kd.zor && kd.zor.has(w.id) ? temel * 2 + 1 : temel;      // takıldığı kelime: öğrenmiş görünse de sık gelir
 }
 function kdSec(havuz, n) {
   const kalan = havuz.map(x => ({ x, w: kdAgirlik(x) })), sec = [];

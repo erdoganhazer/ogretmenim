@@ -15,7 +15,7 @@ export function uyarilariHesapla(v) {
   if (planlanan > 0 && saat >= 17 && yapilan < planlanan * 0.9) {
     const yapilanlar = new Set(cal.filter(c => c.durum === "bitti").map(c => c.odev_id));
     const kalan = ((pg.gun && pg.gun.plan_odevler) || []).filter(id => !yapilanlar.has(id)).map(id => acik.find(o => o.id === id)).filter(Boolean).map(o => dersAdi(o.ders_id));
-    u.push({ anahtar: `plan:${bugun}`, tur: "plan", metin: `${ad} bugünkü planın %${Math.round(100 * yapilan / planlanan)}'ini yaptı${kalan.length ? ` · kalan: ${[...new Set(kalan)].join(", ")}` : ""}` });
+    u.push({ anahtar: `plan:${bugun}`, tur: "plan", metin: `${ad}: bugünkü planın %${Math.round(100 * yapilan / planlanan)} kadarı yapıldı${kalan.length ? ` · kalan: ${[...new Set(kalan)].join(", ")}` : ""}` });
   } else if (saat >= 17 && !calisti && yaklasan) {
     u.push({ anahtar: `plan:${bugun}`, tur: "plan", metin: `${ad} bugün hiç çalışma işaretlemedi; teslimi yaklaşan ödev var` });
   }
@@ -26,5 +26,5 @@ export function uyarilariHesapla(v) {
   for (const m of v.mesajlar.filter(m => !m.silindi && m.kimden === "ogrenci" && m.tur === "istek" && !m.tamam)) u.push({ anahtar: `istek:${m.id}`, tur: "istek", metin: `${ad}: “${String(m.metin).slice(0, 80)}”` });
   for (const s of v.etkinlikler.filter(e => !e.silindi && e.tur === "sinav" && e.tarih < bugun && e.tarih >= gunEkle(bugun, -30) && typeof v.notlar[e.id] !== "number"))
     u.push({ anahtar: `not:${s.id}`, tur: "not", metin: `${dersAdi(s.ders_id)} sınavının notu girilmedi` });
-  return { uyarilar: u, ozet: `${ad} bugün ${biten} iş bitirdi${planlanan ? `, planın %${Math.min(100, Math.round(100 * yapilan / planlanan))}'i` : ""}.` };
+  return { uyarilar: u, ozet: `${ad} bugün ${biten} iş bitirdi${planlanan ? ` (plan %${Math.min(100, Math.round(100 * yapilan / planlanan))})` : ""}.` };
 }

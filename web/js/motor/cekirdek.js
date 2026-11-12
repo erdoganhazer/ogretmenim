@@ -928,7 +928,11 @@ const Cekirdek = (() => {
       }
       const kutu = l => l.reduce((k, d) => (d ? Math.min(5, k + 1) : 1), 0);
       const sade = {}; for (const [kid, s] of durum) sade[kid] = kutu(s.sonuc);
-      if (!ayrinti) return { kutu: sade };
+      if (!ayrinti) {
+        // Takıldığı kelimeler: en az 3 kez sorulmuş ve doğruluğu %70'in altında — oyun bunları daha sık sorar (kutu düzelse de)
+        const zor = [...durum].filter(([, s]) => s.deneme >= 3 && s.dogru / s.deneme < 0.7).map(([kid]) => kid);
+        return { kutu: sade, zor };
+      }
       const ozet = [];
       for (const d of defterler) {
         const ks = kelimeler.filter(k => k.defter_id === d.id), satir = [];
@@ -1003,7 +1007,8 @@ const Cekirdek = (() => {
         const m = harita[kol] = {};
         if (!K[kol]) K[kol] = [];
         const byId = new Map(K[kol].map(k => [k.id, k]));
-        const byAn = ANAHTAR[kol] ? new Map(K[kol].filter(k => !k.silindi).map(k => [ANAHTAR[kol](k), k])) : null;
+        // doğal anahtar: silinmemiş kayıt önce gelir; silinmiş olan yalnız silinmiş gelen kaydın eşi olabilir
+        const byAn = ANAHTAR[kol] ? new Map([...K[kol].filter(k => k.silindi), ...K[kol].filter(k => !k.silindi)].map(k => [ANAHTAR[kol](k), k])) : null;
         for (const g0 of GK[kol] || []) {
           if (!g0 || typeof g0 !== "object" || !g0.id) { r.atlanan++; continue; }
           r.dosyada++;
@@ -1011,7 +1016,14 @@ const Cekirdek = (() => {
           delete g._s;
           for (const alan of REF[kol] || []) if (g[alan] && harita[alan === "defter_id" ? "kelime_defterleri" : "dersler"][g[alan]]) g[alan] = harita[alan === "defter_id" ? "kelime_defterleri" : "dersler"][g[alan]];
           if (kol === "odevler") delete g.ekler;
-          let var_ = byId.get(g.id) || (byAn && !g.silindi ? byAn.get(ANAHTAR[kol](g)) : null);
+          let var_ = byId.get(g.id) || (byAn ? byAn.get(ANAHTAR[kol](g)) : null);
+          if (var_ && var_.silindi && !g.silindi && var_.id !== g.id) var_ = null;      // silinmiş bir kaydı canlı kayıtla eşleme
+          // Dosyada silinmiş, burada yalnız hazır olarak açılmış (hiç değiştirilmemiş) kayıt: silme taşınır
+          if (var_ && g.silindi && var_.id !== g.id) {
+            if (!var_.silindi && al(var_, "olusturma") === al(var_, "degisme")) { var_.silindi = true; var_.degisme = this.simdi(); r.guncellenen++; } else r.ayni++;
+            m[g0.id] = var_.id; continue;
+          }
+          if (!var_ && g.silindi) { r.atlanan++; continue; }                     // silinmiş ve burada karşılığı yok: almaya gerek yok
           if (!var_) { K[kol].push(g); byId.set(g.id, g); m[g0.id] = g.id; r.eklenen++; continue; }   // doğal anahtar yalnız önceden var olanlarla
           m[g0.id] = var_.id;
           const once = JSON.stringify(var_);
@@ -1028,6 +1040,9 @@ const Cekirdek = (() => {
           JSON.stringify(var_) === once ? r.ayni++ : r.guncellenen++;
         }
       }
+      const dosyaDefter = new Set((GK.kelime_defterleri || []).map(d => kucuk(d.ad)));
+      const fazla = K.kelime_defterleri.filter(d => !d.silindi && !dosyaDefter.has(kucuk(d.ad)) && al(d, "olusturma") === al(d, "degisme"));
+      if (fazla.length && (GK.kelime_defterleri || []).length) rapor.uyarilar.push(`Burada hazır gelen ama dosyada olmayan kelime defterleri: ${fazla.map(d => d.ad).join(", ")}. İstemiyorsan Ayarlar › Kelime listeleri'nden silebilirsin.`);
       for (const kol of ["uniteler", "konular", "notlar"]) rapor.arsiv[kol] = (GK[kol] || []).filter(x => x && !x.silindi).length;
       // Plan
       const P = hedef.plan, GP = gelen.plan || {}, od = id => harita.odevler[id] || id;
