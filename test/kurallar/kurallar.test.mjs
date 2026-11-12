@@ -84,11 +84,13 @@ test("Notlarım öğrencinindir: veli okur, yazamaz", async () => {
   await assertSucceeds(getDoc(doc(db("u_veli"), `${A}/ders_notlari/n1`)));
   await assertFails(updateDoc(doc(db("u_veli"), `${A}/ders_notlari/n1`), { metin: "düzelttim" }));
 });
-test("sınav notları yalnız velide; etkinlik belgesinde not tutulmaz", async () => {
+test("sınav notlarını veli yazar; öğrenci kendi notlarını görür ama yazamaz; etkinlik belgesinde not tutulmaz", async () => {
   await assertSucceeds(setDoc(doc(db("u_veli"), `${A}/sinav_notlari/e1`), { id: "e1", puan: 85 }));
-  await assertFails(getDoc(doc(db("u_arin"), `${A}/sinav_notlari/e1`)));
-  await assertFails(getDocs(collection(db("u_arin"), `${A}/sinav_notlari`)));
+  await assertSucceeds(getDoc(doc(db("u_arin"), `${A}/sinav_notlari/e1`)));
+  await assertSucceeds(getDocs(collection(db("u_arin"), `${A}/sinav_notlari`)));
+  await assertFails(getDocs(collection(db("u_elif"), `${A}/sinav_notlari`)));                       // başka öğrenci göremez
   await assertFails(setDoc(doc(db("u_arin"), `${A}/sinav_notlari/e9`), { id: "e9", puan: 100 }));
+  await assertFails(updateDoc(doc(db("u_arin"), `${A}/sinav_notlari/e1`), { puan: 100 }));
   await assertFails(setDoc(doc(db("u_veli"), `${A}/etkinlikler/e5`), { id: "e5", kaynak: "veli", tur: "sinav", puan: 70 }));
   await assertSucceeds(setDoc(doc(db("u_veli"), `${A}/etkinlikler/e5`), { id: "e5", kaynak: "veli", tur: "sinav" }));
 });

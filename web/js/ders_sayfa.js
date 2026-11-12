@@ -38,14 +38,14 @@ function dersSayfasiCiz() {
   const tarihY = t => { const x = strTarih(t); return `${x.getDate()} ${AYLAR[x.getMonth()]} ${GUNLER[x.getDay()]}`; };
   const sinavSatir = s => `<li class="ds-sinav${veli ? " tikla" : ""}" data-id="${s.id}"><span>${tarihY(s.tarih)}${s.bas ? " · " + esc(s.bas) : ""}</span>
       <span class="ds-tur">${SINAV_TURLERI[s.sinav_turu] || "Yazılı"}</span>
-      ${veli ? (typeof s.puan === "number" ? `<span class="not-rozet ${notSinifi(s.puan)}">${s.puan}</span>` : `<span class="not-bekle">${s.tarih >= bugun ? "yaklaşıyor" : "not girilmedi"}</span>`) : ""}</li>`;
+      ${typeof s.puan === "number" ? `<span class="not-rozet ${notSinifi(s.puan)}">${s.puan}</span>` : `<span class="not-bekle">${s.tarih >= bugun ? "yaklaşıyor" : veli ? "not girilmedi" : "not bekleniyor"}</span>`}</li>`;
   const yk = dersYaziliKodu(d);
   const notlar = dersNotlari(d.id), dz = DS.duzenlenen;
 
   kap.innerHTML = `
     <div class="ds-ust" style="--renk:${esc(d.renk)}">
       <h1 class="sayfa-baslik">${esc(d.ad)}</h1>
-      <div class="ds-ozet">${saatList.length ? `Haftada ${saatList.length} saat` : "Programda yok"}${veli && ort !== null ? ` · ortalama <b class="${notSinifi(ort)}">${ortYaz(ort)}</b>` : ""}</div>
+      <div class="ds-ozet">${saatList.length ? `Haftada ${saatList.length} saat` : "Programda yok"}${ort !== null ? ` · ortalama <b class="${notSinifi(ort)}">${ortYaz(ort)}</b>` : ""}</div>
       ${yk ? `<button class="dugme ana-dugme" data-yazili="${yk}">🎯 Yazılıya hazırlan</button>` : ""}
     </div>
     <div class="ds-izgara">

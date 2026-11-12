@@ -96,3 +96,9 @@
   geçmişe yazılır (adres değişmez). Geri: açık menü kapanır → oyun/sınav penceresinde bir üst ekran → açık pencere kapanır → önceki sayfa.
   Ana sayfada ilk geri "Çıkmak için bir daha geri'ye bas" der; 2 saniye içinde ikincisi çıkar. Pencere ✕/Esc ile kapanınca kaydı geri alınır.
 - Denendi (telefon boyutu): Özet → Dersler → ders sayfası → mesaj penceresi, ✕ ile kapanan pencere, oyunda ünite/etkinlik ekranları, çıkış uyarısı.
+
+## 12.11.2026 — Öğrenci notlarını görür (karar değişti)
+- İstek: Derslerim'de saat yerine son not ve ortalama; öğrenci de görsün. Kural `sinav_notlari`: okuma `erisir(oid)` (öğrenci kendi notları), yazma yalnız veli.
+  Öğrenci cihazı notları yükler (yazmaz). Derslerim kartı: son not + ortalama ("Henüz not yok"), genel ortalama paneli öğrenciye de açık; ders sayfasında notlar.
+- Kural testi güncellendi (öğrenci okur, yazamaz/değiştiremez; başka öğrenci göremez): 19/19. Uçtan uca: 80, 90 → Türkçe son 90 ort. 85; genel 75.
+- Telefon alt çubuğu sekme sayısına göre bölünüyor (öğrencide 5 sekme olunca "Defterim" ikinci satıra düşüyordu).

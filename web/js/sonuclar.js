@@ -124,13 +124,16 @@ function derslerSayfasiCiz() {
   const veli = veliAktif();
   kap.innerHTML = dersler.map(d => {
     const k = sonucMap.get(d.id);
-    if (!veli) {                                          // öğrenci: not ve ortalama yok; ders sayfasına götüren kart
+    if (!veli) {                                          // öğrenci: son not ve ortalama; ders sayfasına götüren kart
       const sonrakiO = k && k.sinavlar.find(s => s.tarih >= bugun);
       const sayi = (durum.veri.koleksiyonlar.ders_notlari || []).filter(n => !n.silindi && n.ders_id === d.id).length;
-      const saatO = Object.values(hucreler).filter(v => v === d.id).length;
+      const son = k && k.sinavlar.filter(s => typeof s.puan === "number").sort((a, b) => b.tarih.localeCompare(a.tarih))[0];
       return `<button type="button" class="panel sonuc-kart ders-kart-ogr" data-ders-ac="${d.id}" style="--renk:${esc(d.renk)}">
         <span class="sonuc-baslik"><span class="sonuc-ders">${esc(d.ad)}</span><span class="ders-ok">›</span></span>
-        <span class="sonuc-bilgi">${saatO ? `Haftada ${saatO} saat` : "Programda yok"}${sayi ? ` · ${sayi} notum` : ""}</span>
+        ${son ? `<span class="ders-notlar"><span>Son not <b class="not-rozet ${notSinifi(son.puan)}">${son.puan}</b></span>
+          <span>Ortalama <b class="ders-ort ${notSinifi(k.ortalama)}">${ortYaz(k.ortalama)}</b></span></span>`
+          : `<span class="sonuc-bilgi">Henüz not yok</span>`}
+        ${sayi ? `<span class="sonuc-bilgi">📝 ${sayi} notum</span>` : ""}
         ${sonrakiO ? `<span class="sonraki-sinav">📅 Sıradaki sınav: ${strTarih(sonrakiO.tarih).getDate()} ${AYLAR[strTarih(sonrakiO.tarih).getMonth()]} ${GUNLER[strTarih(sonrakiO.tarih).getDay()]}</span>` : ""}
       </button>`;
     }

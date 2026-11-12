@@ -4,7 +4,7 @@ Arın'ın ev çalışma uygulamasını, Hazer'in bilgisayarına bağlı olmadan,
 
 - Önceden tanımlı hesaplarla giriş (kullanıcı adı + şifre); yönetici, veli, öğrenci rolleri; çok öğrenci, çok veli.
 - Yetki sunucuda (Firestore kuralları) denetlenir.
-- Veli Paneli yok; her şey tek uygulamada. Öğrenci istatistik, not ve süre görmez.
+- Veli Paneli yok; her şey tek uygulamada. Öğrenci istatistik ve süre görmez; kendi notlarını görür (12.11.2026).
 - Konu Defteri, fotoğraflar (avatar hariç) ve ödev ekleri kalkar; eskileri taşımada arşiv olarak verilir.
 - Ders sayfası: yazılı notları, ortalama, yaklaşan sınavlar, kaynaklar, ders programı, yazılı hazırlık, Notlarım.
 - Çevrimdışı çalışan PWA (Samsung A05, Linux Mint'te otomatik açılış).
@@ -19,6 +19,7 @@ Arın'ın ev çalışma uygulamasını, Hazer'in bilgisayarına bağlı olmadan,
 - Ticari ürün şimdilik durduruldu; Arın + iki veli için çelişkisiz kullanım önce. Ticari dönüş için şimdiden kurulan yapılar:
   hesaplarda `aile` alanı, sınav notlarının ayrı belgede (`sinav_notlari`, ileride öğretmen de yazar), içerik paketleri (`hazirlik/paketler.json`,
   öğrenciye atanır), sürümlü öğrenci dosyası (`ogretmenim-ogrenci-dosyasi` v1), rol listesi genişletilebilir.
-- Öğrenci not, ortalama, süre görmez — veri de cihazına gelmez (kural düzeyinde).
+- ~~Öğrenci not, ortalama, süre görmez~~ → **12.11.2026 değişti:** öğrenci kendi sınav notlarını, ders ortalamalarını ve genel ortalamasını görür
+  (Derslerim, ders sayfası); notu yalnız veli yazar (kural). Süre ve istatistik hâlâ yalnız velide.
 - Öğrenci dosyası yıllar boyu taşınır: tüm sınıflar tek dosyada; dersler sınıflar arasında taşınabilir (ileri/geri).
 - Başarımlar istendi (bronz/gümüş/altın); not ve süreye değil emeğe/düzene bağlı olacak.

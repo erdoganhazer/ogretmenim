@@ -261,7 +261,7 @@ const Bulut = (() => {
       }));
       dinle(this.yol(""), s => { if (s.exists()) this.harita.set("", s.data()); });
       dinle(this.yol("plan/ayarlar"), s => { if (s.exists()) this.harita.set("plan/ayarlar", s.data()); else this.harita.delete("plan/ayarlar"); });
-      for (const kol of [...Parcala.KAYIT_KOLLARI, "plan_gun", ...(veli ? [Parcala.NOT_KOL] : [])]) dinle(C("ogrenciler", this.oid, kol), s => {
+      for (const kol of [...Parcala.KAYIT_KOLLARI, "plan_gun", Parcala.NOT_KOL]) dinle(C("ogrenciler", this.oid, kol), s => {
         for (const d of s.docChanges()) { const p = `${kol}/${d.doc.id}`; if (d.type === "removed") this.harita.delete(p); else this.harita.set(p, d.doc.data()); }
       });
       for (const a of veli ? ["alistirmalar", "gunluk"] : ["alistirmalar"]) dinle(C("ogrenciler", this.oid, a), s => {

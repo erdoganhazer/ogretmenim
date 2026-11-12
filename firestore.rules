@@ -130,9 +130,10 @@ service cloud.firestore {
         allow delete: if false;
       }
 
-      // Sınav notları: yalnız veli (ileride öğretmen) okur ve yazar; öğrenci hiç göremez
+      // Sınav notları: veli (ileride öğretmen) yazar; öğrenci kendi notlarını görür ama yazamaz (karar 12.11.2026)
       match /sinav_notlari/{sid} {
-        allow read, create, update: if veliOf(oid);
+        allow read: if erisir(oid);
+        allow create, update: if veliOf(oid);
         allow delete: if false;
       }
 
