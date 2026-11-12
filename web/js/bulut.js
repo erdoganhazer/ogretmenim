@@ -220,9 +220,34 @@ const Bulut = (() => {
     return FB.onSnapshot(C("konusmalar", kid, "mesajlar"),
       s => cb(s.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => (a.zaman < b.zaman ? -1 : a.zaman > b.zaman ? 1 : 0))), () => cb([]));
   }
+  /* Her bildirim iki yere yazılır: telefon bildirimi için kuyruğa (sunucu gönderir) ve alıcının gelen kutusuna (uygulamadaki 🔔, anında).
+     Gelen kutusu: kişiye özel → kisiler/{kisi}/gelen; öğrencinin velilerine → ogrenciler/{oid}/gelen (kime: "veliler"). */
   function kuyrukKaydi(b, ben, { hedef, baslik, metin, tur = "mesaj", ac = "" }) {
-    b.set(D("bildirim_kuyrugu", yeniId()), { kimden: ben.id, kimden_ad: ben.ad || "", hedef, baslik: String(baslik).slice(0, 80),
-      metin: String(metin).slice(0, 300), tur, ac: String(ac).slice(0, 120), zaman: new Date().toISOString() });
+    const zaman = new Date().toISOString(), kayit = { kimden: ben.id, kimden_ad: ben.ad || "", baslik: String(baslik).slice(0, 80),
+      metin: String(metin).slice(0, 300), tur, ac: String(ac).slice(0, 120), zaman };
+    b.set(D("bildirim_kuyrugu", yeniId()), { ...kayit, hedef });
+    if (hedef.kisi) b.set(D("kisiler", hedef.kisi, "gelen", yeniId()), { ...kayit, okundu: false });
+    else if (hedef.ogrenci_velileri) b.set(D("ogrenciler", hedef.ogrenci_velileri, "gelen", yeniId()), { ...kayit, kime: "veliler", okuyan: {} });
+  }
+  /* Gelen kutusunu dinle: kendi kutum + (veliysem) seçili öğrencinin velilere giden kutusu */
+  function gelenDinle(ben, oid, cb) {
+    const parca = { kisi: [], ogrenci: [] }, bildir = () => cb([...parca.kisi, ...parca.ogrenci].sort((a, b) => (a.zaman < b.zaman ? 1 : -1)));
+    const kapat = [FB.onSnapshot(C("kisiler", ben.id, "gelen"), s => { parca.kisi = s.docs.map(d => ({ id: d.id, yol: "kisi", ...d.data(), okundu: !!d.data().okundu })); bildir(); }, () => {})];
+    if (oid && ["veli", "yonetici"].includes(ben.rol))
+      kapat.push(FB.onSnapshot(C("ogrenciler", oid, "gelen"), s => {
+        parca.ogrenci = s.docs.map(d => ({ id: d.id, yol: "ogrenci", oid, ...d.data() })).filter(g => g.kime === "veliler" && g.kimden !== ben.id)
+          .map(g => ({ ...g, okundu: !!(g.okuyan || {})[ben.id] }));
+        bildir();
+      }, () => {}));
+    return () => kapat.forEach(f => f());
+  }
+  async function gelenOkundu(ben, liste) {
+    const b = FB.writeBatch(db), zaman = new Date().toISOString();
+    for (const g of liste) {
+      if (g.yol === "kisi") b.update(D("kisiler", ben.id, "gelen", g.id), { okundu: true });
+      else b.set(D("ogrenciler", g.oid, "gelen", g.id), { okuyan: { [ben.id]: zaman } }, { merge: true });
+    }
+    try { await b.commit(); } catch (_) { /* çevrimdışı: sonra */ }
   }
   async function konusmaMesaji(ben, diger, metin) {
     const kid = konusmaKimligi(ben.id, diger.id), zaman = new Date().toISOString(), b = FB.writeBatch(db);
@@ -324,7 +349,7 @@ const Bulut = (() => {
     kapat() { this.kapatlar.forEach(f => f()); this.kapatlar = []; }
   }
 
-  return { kisilerim, konusmaKimligi, konusmalarimiDinle, konusmaDinle, konusmaMesaji, konusmaOkundu, bildirimKuyruga,
+  return { gelenDinle, gelenOkundu, kisilerim, konusmaKimligi, konusmalarimiDinle, konusmaDinle, konusmaMesaji, konusmaOkundu, bildirimKuyruga,
     bilinenler, haberimVar, icerikGetir, icerikAta, bildirimAyarOku, bildirimAyarYaz, cihazlar, cihazYaz, bildirimTokeni, bugunStr,
     baslat, oturumuBekle, kimim, girisYap, cikisYap, kurulumVarMi, ilkKurulum, sifremiDegistir, hesaplar, hesapAc, hesapGuncelle, sifreYenile,
     kullaniciAdi, Esitleyici, ogrenciAdi: async kid => { try { const k = await FB.getDoc(D("kisiler", kid)); return k.exists() ? k.data().ad : "Öğrenci"; } catch (_) { return "Öğrenci"; } } };

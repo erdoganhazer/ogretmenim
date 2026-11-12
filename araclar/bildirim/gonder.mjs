@@ -45,6 +45,8 @@ for (const veli of veliler) {
     const metin = secili.length ? secili.slice(0, 4).map(u => "• " + u.metin).join("\n") + (secili.length > 4 ? `\n+${secili.length - 4} daha` : "") : ozet + " Her şey yolunda 👍";
     const veri = { baslik, metin, ogrenci: oid, anahtarlar: secili.map(u => u.anahtar).join(","), etiket: `gun-${oid}` };
     if (KURU) { console.log(veli.data().ad, "→", JSON.stringify(veri)); continue; }
+    // uygulamadaki 🔔 listesi için velinin gelen kutusuna da yaz
+    await veli.ref.collection("gelen").add({ kimden: "", kimden_ad: "ÖğretmeniM", baslik, metin, tur: "uyari", ac: "ozet", zaman: new Date().toISOString(), okundu: false });
     for (const c of cihazlar) {
       try {
         await admin.messaging().send({ token: c.data().token, data: veri, webpush: { headers: { Urgency: "high", TTL: "36000" } } });

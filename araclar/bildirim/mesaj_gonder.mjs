@@ -57,6 +57,10 @@ for (const b of kuyruk.docs) {
   }
   const veri = { baslik: String(k.baslik || "ÖğretmeniM"), metin: String(k.metin || ""), ac: String(k.ac || ""), etiket: `${k.tur}-${b.id.slice(0, 8)}` };
   for (const a of alicilar) {
+    if (k.tur === "odev") {                                             // velinin tercihi: "Öğrenci ödev bitirince" kapalıysa gönderme
+      const ay = await db.collection("kisiler").doc(a.id).collection("ayar").doc("bildirim").get();
+      if (ay.exists && ((ay.data().uyarilar || {}).odev_bitti === false)) continue;
+    }
     const cihazlar = (await db.collection("kisiler").doc(a.id).collection("cihazlar").where("aktif", "==", true).get()).docs;
     if (KURU) { console.log(`${k.tur}: ${k.kimden_ad || k.kimden} → ${a.ad} (${cihazlar.length} cihaz):`, JSON.stringify(veri)); continue; }
     for (const c of cihazlar) {

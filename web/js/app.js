@@ -14,9 +14,12 @@ const $$ = (s, k = document) => Array.from(k.querySelectorAll(s));
 /* Web: istekler sunucuya değil tarayıcıdaki motora gider (js/motor/). Oturum (rol) giriş katmanından gelir. */
 async function api(yontem, yol, govde) {
   const oturum = window.OTURUM || { veli: false };
+  const izle = yontem !== "GET" && !oturum.veli && typeof odevBittiOnce === "function";   // öğrenci ödev bitirdi mi?
+  const once = izle ? await odevBittiOnce() : null;
   const { durum, govde: sonuc } = await Depo.istek(yontem, yol, govde, oturum);
   if (durum === 401 && sonuc.kod === "veli_gerekli") throw new Error("Bu işlemi yalnız veli yapabilir");
   if (durum >= 400) throw new Error(sonuc.hata || "Bir sorun oluştu");
+  if (izle) odevBittiSonra(once);
   return sonuc;
 }
 
@@ -182,6 +185,7 @@ async function basla() {
   cepOlaylariniKur();
   motivasyonOlaylariniKur();
   mesajOlaylariniKur();
+  if (typeof gelenOlaylariniKur === "function") gelenOlaylariniKur();
   miniOyunOlaylariniKur();
   gelisimOlaylariniKur();
   planOlaylariniKur();

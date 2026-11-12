@@ -18,6 +18,12 @@ export async function alicilariBul(kayit, erisim) {
     const a = await erisim.kisi(hedef.kisi);
     return uygun(a) ? [a] : [];
   }
+  // ödev bitti: yalnız öğrencinin kendisi, kendi velilerine
+  if (kayit.tur === "odev") {
+    const oid = hedef.ogrenci_velileri;
+    if (!oid || gonderen.id !== oid) return [];
+    return (await erisim.ogrencininVelileri(oid)).filter(a => uygun(a) && VELI.includes(a.rol));
+  }
   if (kayit.tur !== "mesaj") return [];
   if (hedef.kisi) {
     const a = await erisim.kisi(hedef.kisi);

@@ -9,6 +9,7 @@ const BILDIRIM_UYARILARI = [
   ["yarin", "Yarın teslim edilecek ödeve başlanmadıysa", true],
   ["geciken", "Teslimi geçen ödev varsa", true],
   ["istek", "Öğrenci bir şey istediyse (mesaj)", true],
+  ["odev_bitti", "Öğrenci bir ödevi bitirince (hemen)", true],
   ["not", "Sınavın notu girilmediyse", false],
   ["ozet", "Her akşam kısa gün özeti (her şey yolunda olsa da)", false],
 ];

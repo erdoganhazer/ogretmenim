@@ -99,6 +99,7 @@ async function ogrenciSecVeBaslat(uygulamayiBaslat) {
   girisEsitleyici.dinleyen = () => { if (typeof herSeyiYenile === "function") { yenidenYukle(); } };
   OTURUM.ogrenciAdi = veli ? await Bulut.ogrenciAdi(oid) : k.ad;
   if (typeof mesajKisileriniBaslat === "function") mesajKisileriniBaslat();   // kişiler + veliler arası sohbet rozetleri
+  if (typeof gelenBaslat === "function") gelenBaslat();                       // 🔔 bildirim zili
   oturumMenusuKur();
   veliGostergesiCiz();
   girisEkrani(null);

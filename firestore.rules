@@ -70,13 +70,25 @@ service cloud.firestore {
       }
     }
 
+    // Gelen kutusu (uygulamadaki 🔔): kişiye özel. Aynı aileden biri kendi adına bırakır; yalnız sahibi okur, "okundu" der, siler.
+    function gelenKaydi(d) {
+      return d.kimden == kisiId() && d.keys().hasOnly(['kimden', 'kimden_ad', 'baslik', 'metin', 'tur', 'ac', 'zaman', 'okundu', 'kime', 'okuyan'])
+        && d.metin is string && d.metin.size() <= 300 && d.baslik is string && d.baslik.size() <= 80
+        && d.tur in ['mesaj', 'odev', 'duyuru'] && (d.tur != 'duyuru' || yonetici());
+    }
+    match /kisiler/{k}/gelen/{gid} {
+      allow create: if aktif() && gelenKaydi(request.resource.data) && kisiBelgesi(k).aile == ben().aile;
+      allow update: if aktif() && kisiId() == k && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['okundu']);
+      allow delete: if aktif() && kisiId() == k;
+    }
+
     // Bildirim kuyruğu: herkes kendi adına "mesaj" bildirimi bırakır, yalnız yönetici "duyuru". Okuyan/silen yalnız sunucu (GitHub'daki iş).
     match /bildirim_kuyrugu/{id} {
       allow create: if aktif() && request.resource.data.kimden == kisiId()
         && request.resource.data.keys().hasOnly(['kimden', 'kimden_ad', 'hedef', 'baslik', 'metin', 'tur', 'ac', 'zaman'])
         && request.resource.data.metin is string && request.resource.data.metin.size() <= 300
         && request.resource.data.baslik is string && request.resource.data.baslik.size() <= 80
-        && (request.resource.data.tur == 'mesaj' || (request.resource.data.tur == 'duyuru' && yonetici()));
+        && (request.resource.data.tur in ['mesaj', 'odev'] || (request.resource.data.tur == 'duyuru' && yonetici()));
       allow read, update, delete: if false;
     }
 
@@ -134,6 +146,15 @@ service cloud.firestore {
       match /sinav_notlari/{sid} {
         allow read: if erisir(oid);
         allow create, update: if veliOf(oid);
+        allow delete: if false;
+      }
+
+      // Öğrencinin velilerine giden gelen kutusu (🔔): öğrenci ya da velisi bırakır; okuyan yalnız kendi "okudum" işaretini ekler; silinmez
+      match /gelen/{gid} {
+        allow read: if erisir(oid);
+        allow create: if erisir(oid) && gelenKaydi(request.resource.data) && request.resource.data.kime == 'veliler';
+        allow update: if erisir(oid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['okuyan'])
+          && request.resource.data.okuyan.diff(resource.data.okuyan).affectedKeys().hasOnly([kisiId()]);
         allow delete: if false;
       }
 

@@ -71,6 +71,13 @@
     </div>
   </div>
   <div class="veli-gosterge" id="veli-gosterge" hidden><span id="veli-kalan"></span><button id="veli-kilitle" hidden></button></div>
+  <div class="gelen-kap">
+    <button class="mesaj-dugme" id="gelen-ac" type="button" title="Bildirimler" aria-label="Bildirimler">🔔<span class="rozet-sayi" id="gelen-sayi" hidden></span></button>
+    <div class="gelen-panel" id="gelen-panel" hidden>
+      <div class="gelen-ust"><b>🔔 Bildirimler</b><button type="button" class="baglanti" id="gelen-hepsi">Tümü okundu</button></div>
+      <div class="gelen-liste" id="gelen-liste"></div>
+    </div>
+  </div>
   <button class="mesaj-dugme" id="mesaj-ac" title="Mesajlar">💬<span class="rozet-sayi" id="mesaj-sayi" hidden></span></button>
   <button class="mesaj-dugme ayar-dugme" data-git="ayarlar" title="Ayarlar">⚙️</button>
   <div class="saat" id="saat"></div>
@@ -652,6 +659,7 @@
 <script src="js/giris.js"></script>
 <script src="js/surum.js"></script>
 <script src="js/app.js"></script>
+<script src="js/gelen.js"></script>
 <script src="js/gezinti.js"></script>
 <script src="js/uygulama.js"></script>
 </body>

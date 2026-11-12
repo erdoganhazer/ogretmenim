@@ -41,3 +41,8 @@ test("kapalı ya da bilinmeyen gönderen hiçbir şey gönderemez", async () => 
   assert.deepStrictEqual(await ids({ kimden: "eski", tur: "mesaj", hedef: { kisi: "arin" } }), []);
   assert.deepStrictEqual(await ids({ kimden: "yok", tur: "mesaj", hedef: { kisi: "arin" } }), []);
 });
+test("ödev bitti bildirimi yalnız öğrencinin kendisinden, kendi velilerine", async () => {
+  assert.deepStrictEqual(await ids({ kimden: "arin", tur: "odev", hedef: { ogrenci_velileri: "arin" } }), ["anne", "hazer"]);
+  assert.deepStrictEqual(await ids({ kimden: "anne", tur: "odev", hedef: { ogrenci_velileri: "arin" } }), []);
+  assert.deepStrictEqual(await ids({ kimden: "elif", tur: "odev", hedef: { ogrenci_velileri: "arin" } }), []);
+});

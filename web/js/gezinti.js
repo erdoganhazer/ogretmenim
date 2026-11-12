@@ -51,7 +51,7 @@
     if (G.yoksay) { G.yoksay--; return; }
     const s = e.state || {};
     // 1) açık menüler
-    const menu = document.querySelector("#oturum-menu:not([hidden])");
+    const menu = document.querySelector("#oturum-menu:not([hidden]), #gelen-panel:not([hidden])");
     if (menu) { menu.hidden = true; return yerindeKal(); }
     // 2–3) açık pencere (en üstteki)
     const acik = [...document.querySelectorAll("dialog[open]")].pop();

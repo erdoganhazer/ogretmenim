@@ -211,3 +211,25 @@ test("öğrenci kendi cihazını bildirim için kaydeder", async () => {
   await assertSucceeds(setDoc(doc(db("u_arin"), `kisiler/${ARIN}/cihazlar/c1`), { token: "t", aktif: true }));
   await assertFails(setDoc(doc(db("u_arin"), `kisiler/${VELI}/cihazlar/c1`), { token: "t", aktif: true }));
 });
+test("gelen kutusu: aynı aileden kendi adına bırakılır, yalnız sahibi okur ve okundu der; öğrencinin velilere kutusu", async () => {
+  await aileKur();
+  const g = (kimden, ek = {}) => ({ kimden, kimden_ad: "x", baslik: "💬 x", metin: "selam", tur: "mesaj", ac: "mesaj", zaman: "z", okundu: false, ...ek });
+  await assertSucceeds(setDoc(doc(db("u_veli"), `kisiler/${ARIN}/gelen/g1`), g(VELI)));                 // veli → öğrencisinin kutusu
+  await assertSucceeds(getDoc(doc(db("u_arin"), `kisiler/${ARIN}/gelen/g1`)));
+  await assertFails(getDoc(doc(db("u_veli"), `kisiler/${ARIN}/gelen/g1`)));                              // başkasının kutusu okunmaz
+  await assertSucceeds(updateDoc(doc(db("u_arin"), `kisiler/${ARIN}/gelen/g1`), { okundu: true }));
+  await assertFails(updateDoc(doc(db("u_arin"), `kisiler/${ARIN}/gelen/g1`), { metin: "değişti" }));
+  await assertFails(setDoc(doc(db("u_veli"), `kisiler/${ARIN}/gelen/g2`), g(YON)));                    // başkası adına
+  await assertFails(setDoc(doc(db("u_yabanci"), `kisiler/${ARIN}/gelen/g3`), g("k_yabanci")));          // başka aile
+  await assertFails(setDoc(doc(db("u_veli"), `kisiler/${ARIN}/gelen/g4`), g(VELI, { tur: "duyuru" }))); // duyuru yalnız yönetici
+  await assertSucceeds(setDoc(doc(db("u_yon"), `kisiler/${ARIN}/gelen/g5`), g(YON, { tur: "duyuru" })));
+  // öğrenci ödev bitirince velilere
+  const og = { ...g(ARIN, { tur: "odev", ac: "ozet", kime: "veliler", okuyan: {} }) }; delete og.okundu;
+  await assertSucceeds(setDoc(doc(db("u_arin"), `${A}/gelen/o1`), og));
+  await assertSucceeds(getDoc(doc(db("u_veli"), `${A}/gelen/o1`)));
+  await assertSucceeds(setDoc(doc(db("u_veli"), `${A}/gelen/o1`), { okuyan: { [VELI]: "z" } }, { merge: true }));
+  await assertFails(setDoc(doc(db("u_veli"), `${A}/gelen/o1`), { okuyan: { [YON]: "z" } }, { merge: true }));   // başkası adına okudu
+  await assertFails(updateDoc(doc(db("u_veli"), `${A}/gelen/o1`), { metin: "x" }));
+  await assertFails(getDoc(doc(db("u_elif"), `${A}/gelen/o1`)));
+  await assertSucceeds(setDoc(doc(db("u_arin"), "bildirim_kuyrugu/od1"), { kimden: ARIN, kimden_ad: "x", hedef: { ogrenci_velileri: ARIN }, baslik: "✅", metin: "Matematik", tur: "odev", ac: "ozet", zaman: "z" }));
+});
