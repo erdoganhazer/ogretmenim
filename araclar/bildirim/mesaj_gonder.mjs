@@ -23,6 +23,23 @@ async function ogrencininVelileri(oid) {
   return s.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
+/* Deneme bildirimi: Actions › Mesaj bildirimleri › Run workflow › "deneme" alanına kullanıcı adı (ör. hazer). Kuyruğa dokunmaz. */
+const DENEME = (process.env.DENEME || "").trim().toLowerCase();
+if (DENEME) {
+  const k = (await db.collection("kisiler").where("kullanici_adi", "==", DENEME).limit(1).get()).docs[0];
+  if (!k) { console.log(`deneme: "${DENEME}" adlı kullanıcı yok`); process.exit(1); }
+  const cihazlar = (await k.ref.collection("cihazlar").where("aktif", "==", true).get()).docs;
+  console.log(`deneme: ${k.data().ad} · ${cihazlar.length} açık cihaz`);
+  const veri = { baslik: "🔔 ÖğretmeniM", metin: "Deneme bildirimi: bu cihaza bildirimler geliyor 👍", ac: "", etiket: "deneme-" + Date.now() };
+  let n = 0;
+  for (const c of cihazlar) {
+    try { await admin.messaging().send({ token: c.data().token, data: veri, webpush: { headers: { Urgency: "high", TTL: "3600" } } }); n++; console.log("  gönderildi:", c.data().ad || c.id); }
+    catch (e) { console.warn("  gönderilemedi:", c.data().ad || c.id, e.code); }
+  }
+  console.log(`deneme bitti: ${n}/${cihazlar.length} cihaza gönderildi`);
+  process.exit(0);
+}
+
 const kuyruk = await db.collection("bildirim_kuyrugu").orderBy("zaman").limit(200).get();
 let gonderilen = 0, atlanan = 0;
 for (const b of kuyruk.docs) {

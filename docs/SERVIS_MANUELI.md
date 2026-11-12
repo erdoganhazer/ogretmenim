@@ -36,7 +36,7 @@
 - **Aile sohbeti** (öğrenci ↔ veliler): üstteki 💬. **Veliler arası özel sohbet:** 💬 › kişiler satırında öbür velinin adı. Öğrenci yalnız aile sohbetini görür.
 - **Yönetici bildirimi:** 💬 › **📣 Bildirim gönder** › kişileri seç › mesaj › Gönder. Listede 🔔 olanların bildirimi açık bir cihazı var.
 - Her mesaj ve bildirim `bildirim_kuyrugu`'na düşer; Actions › **"Mesaj bildirimleri"** 5 dakikada bir gönderir (GitHub yoğunken birkaç dakika gecikebilir).
-  Elle deneme: Run workflow › kuru = 1 (göndermez, silmez, günlüğe yazar). Gönderilen kayıt silinir; 2 günden eski takılı kayıt temizlenir.
+  Elle deneme: Run workflow › kuru = 1 (göndermez, silmez, günlüğe yazar). Bir kişiye deneme bildirimi: Run workflow › deneme = kullanıcı adı (ör. hazer). Gönderilen kayıt silinir; 2 günden eski takılı kayıt temizlenir.
 - **Öğrenci de mesaj bildirimi alabilir:** öğrenci girişi › ⚙️ Ayarlar › 🔔 Mesaj bildirimleri › Bildirimleri aç.
 - Kişi listesi aynı ailedeki hesaplardan oluşur (`aile` alanı). İlk sürümde açılan yönetici kaydına aile girişte kendiliğinden yazılır;
   eksik kalan hesaplar yönetici "Hesapları yönet"i açınca tamamlanır.
