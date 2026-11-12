@@ -102,3 +102,15 @@
   Öğrenci cihazı notları yükler (yazmaz). Derslerim kartı: son not + ortalama ("Henüz not yok"), genel ortalama paneli öğrenciye de açık; ders sayfasında notlar.
 - Kural testi güncellendi (öğrenci okur, yazamaz/değiştiremez; başka öğrenci göremez): 19/19. Uçtan uca: 80, 90 → Türkçe son 90 ort. 85; genel 75.
 - Telefon alt çubuğu sekme sayısına göre bölünüyor (öğrencide 5 sekme olunca "Defterim" ikinci satıra düşüyordu).
+
+## 12.11.2026 — Bildirim zili, ödev bitince bildirim, veli Özet görev listesi
+- **🔔 Bildirim zili** (öğrenci ve veli): üst şeritte okunmamış sayısı; açınca son bildirimler, dokununca ilgili yer (sohbet, Özet).
+  Gelen kutusu `kisiler/{k}/gelen` (kişiye özel) ve `ogrenciler/{oid}/gelen` (kime: veliler; okuyan veli başına işaretlenir). Mesaj/duyuru/ödev bildirimi
+  kuyruğa yazılırken aynı toplu yazımda kutuya da yazılır → zil, telefon bildiriminden bağımsız ve anında. Günlük veli uyarılarını sunucu kutuya yazar.
+- **Ödev bitince:** öğrenci cihazında `api()` veri değiştiren isteklerden önce/sonra bitmiş ödevleri karşılaştırır; yeni biten için velilere
+  "✅ … bir ödevini bitirdi" (zil + telefon). Veli Ayarlar › Bildirimler › "Öğrenci bir ödevi bitirince" ile telefon bildirimini kapatabilir.
+- **Veli Özet:** "📋 Bugünün görevleri" kontrol listesi (✓ tamam, ◐ yarım, ☐ eksik; plan görevleri, her gün yapılacaklar, bugün teslim) + ilerleme çubuğu,
+  altında "📅 Haftanın görevleri" (yarından 6 gün, teslimler). Not: `.oz-cubuk` adı "Son 7 gün" grafiğinde kullanılıyordu; yeni çubuk `.oz-gorev-cubuk`.
+- Kurallar 20/20, alıcı testi 7/7. Uçtan uca (sahte Firebase, telefon boyutu): duyuru öğrencinin zilinde, ödev bitince velinin zilinde, açınca okundu.
+- **Açık sorun:** GitHub zamanlanmış işleri (bildirim.yml, mesaj_bildirim.yml) kurulduğundan beri hiç kendiliğinden çalışmadı; telefon bildirimleri yalnız
+  elle başlatınca gitti. Zil bundan etkilenmez.

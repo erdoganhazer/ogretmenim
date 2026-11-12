@@ -43,6 +43,10 @@
 - Gönderim izni: sunucu (`araclar/bildirim/alicilar.mjs`) ayrıca denetler: veli → kendi öğrencisi ya da aynı ailenin velisi; öğrenci → kendi velileri;
   duyuru yalnız yöneticiden. Testi: `node --test test/alicilar_test.mjs`.
 
+## Bildirim zili (🔔)
+- Üst şeritte; okunmamış sayısını gösterir. Mesaj, duyuru, "ödev bitti" ve günlük veli uyarıları burada listelenir; açınca okundu sayılır.
+- Telefon bildirimi gecikse ya da kapalı olsa da zil anında güncellenir (gelen kutusu: `kisiler/{k}/gelen`, `ogrenciler/{oid}/gelen`).
+
 ## Sürüm ve güncelleme
 - Sürüm, Ayarlar'ın altında ve hesap menüsünün en altında soluk bir satırda: `Sürüm abc1234 · 12 Kas 15:30 · ✓ güncel`.
 - Yeni sürüm yayındaysa aynı satırda **⬆ Güncelle** çıkar; basınca uygulama yeni sürüme geçer. (Kendiliğinden de geçer; düğme beklememek için.)

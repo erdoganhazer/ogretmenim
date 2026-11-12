@@ -2233,3 +2233,29 @@ body:not(.veli-modu) .yalniz-veli { display: none !important; }
 @media (max-width: 1023px) {
   .gelen-panel { position: fixed; top: calc(60px + env(safe-area-inset-top)); left: 10px; right: 10px; width: auto; max-height: 75dvh; }
 }
+
+/* Veli Özet: bugünün görevleri (kontrol listesi) ve haftanın görevleri */
+.oz-gorev-panel { margin-top: 16px; }
+.oz-gorev-sayac { font-size: 14px; font-weight: 700; color: var(--vurgu); }
+.oz-gorev-cubuk { height: 8px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; margin-bottom: 12px; }
+.oz-gorev-cubuk i { display: block; height: 100%; background: linear-gradient(90deg, #22C55E, #FEB500); border-radius: 6px; }
+.oz-cl-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.oz-cl { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; align-items: center; padding: 8px 10px; border-radius: var(--yaricap-k);
+  background: var(--zemin-ust); border-left: 4px solid var(--r); }
+.oz-cl-kutu { width: 24px; height: 24px; border-radius: 6px; border: 2px solid var(--cizgi); display: grid; place-items: center; font-weight: 900; font-size: 15px; }
+.oz-cl.tamam .oz-cl-kutu { background: #22C55E; border-color: #22C55E; color: #0E1A2B; }
+.oz-cl.yarim .oz-cl-kutu { border-color: var(--vurgu); color: var(--vurgu); }
+.oz-cl.tamam .oz-cl-yazi { opacity: .65; }
+.oz-cl.tamam .oz-cl-yazi b { text-decoration: line-through; }
+.oz-cl-yazi { min-width: 0; overflow-wrap: anywhere; }
+.oz-cl-yazi small { display: block; color: var(--yazi-soluk); font-size: 12.5px; }
+.oz-hafta-gunler { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.oz-hg { background: var(--zemin-ust); border: 1px solid var(--cizgi); border-radius: var(--yaricap-k); padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.oz-hg.ozel { border-color: var(--vurgu); }
+.oz-hg-ad { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.oz-hg-ad small { color: var(--yazi-soluk); font-size: 12px; }
+.oz-hg ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13.5px; }
+.oz-hg li { border-left: 3px solid var(--r, var(--cizgi)); padding-left: 7px; overflow-wrap: anywhere; }
+.oz-hg-bos { color: var(--yazi-soluk); border: 0 !important; padding: 0 !important; }
+.oz-hg-teslim { font-size: 12.5px; color: var(--vurgu); }
+@media (max-width: 760px) { .oz-hafta-gunler { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

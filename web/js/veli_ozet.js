@@ -52,6 +52,7 @@ async function veliOzetCiz() {
   try { plan = await api("GET", "plan"); } catch (_) { /* plan yoksa da özet çizilir */ }
   try { VO.bilinen = new Set(await Bulut.bilinenler(OTURUM.ogrenci)); } catch (_) { /* çevrimdışı */ }
   VO.son = plan;
+  ozGorevlerCiz(plan);
   const ad = (durum.veri.profil.ogrenci_adi || "Öğrenci").trim(), bugun = tarihStr(new Date());
   $("#oz-baslik").textContent = ad;
   $("#oz-alt").textContent = `${tarihYaz(bugun)} · ${aktifSinif()}. sınıf`;
@@ -99,6 +100,50 @@ async function veliOzetCiz() {
   const notlu = sinavlar.filter(s => typeof s.puan === "number").sort((a, b) => b.tarih.localeCompare(a.tarih)).slice(0, 5);
   $("#oz-notlar").innerHTML = notlu.length ? `<ul class="ds-liste">${notlu.map(s => `<li class="tikla" data-oz-sinav="${s.id}" title="Notu düzeltmek için dokun"><span>${esc(dersAdiBul(s.ders_id))} <small>${tarihYaz(s.tarih)}</small></span>
       <span class="oz-not-sag"><span class="not-rozet ${notSinifi(s.puan)}">${s.puan}</span><span class="oz-duzelt" aria-hidden="true">✎</span></span></li>`).join("")}</ul>` : `<p class="oz-bos">Henüz not girilmedi.</p>`;
+}
+
+/* Bugünün görevleri: kontrol listesi (✓ tamamlanan, ◐ yarım, ☐ eksik) · Haftanın görevleri: yarından itibaren gün gün */
+function ozGorevlerCiz(plan) {
+  const kap = $("#oz-bugun"), hafta = $("#oz-hafta-gorev");
+  if (!kap || !hafta) return;
+  if (!plan || !plan.gunler || !plan.gunler.length) { kap.innerHTML = hafta.innerHTML = `<p class="oz-bos">Plan henüz yok.</p>`; $("#oz-gorev-sayac").textContent = ""; return; }
+  const bugun = tarihStr(new Date()), g0 = plan.gunler[0], odevler = aktifOdevler();
+  const odev = id => odevler.find(o => o.id === id) || {};
+  const ders = id => dersBul(id) || { ad: "Ders", renk: "#888" };
+  const satir = (durumu, d, metin, alt = "") => `<li class="oz-cl ${durumu}" style="--r:${esc(d.renk)}">
+      <span class="oz-cl-kutu" aria-label="${{ tamam: "tamamlandı", yarim: "yarım", eksik: "yapılmadı" }[durumu]}">${{ tamam: "✓", yarim: "◐", eksik: "" }[durumu]}</span>
+      <span class="oz-cl-yazi"><b>${esc(d.ad)}</b> ${esc(metin)}${alt ? `<small>${esc(alt)}</small>` : ""}</span></li>`;
+  const tamam = [], eksik = [], gosterilen = new Set();
+  const etiket = (o, parca) => { const bas = o.baslik || ""; return { metin: parca || bas || "ödev", alt: [bas && bas !== parca ? bas : "", o.teslim === bugun ? "📦 bugün teslim" : ""].filter(Boolean).join(" · ") }; };
+  // bugün işaretlenenler (öğrencinin "bitti" / "yarım" dediği çalışmalar)
+  for (const c of (plan.bugun_yapilanlar || []).filter(c => ["bitti", "yarim"].includes(c.durum))) {
+    const o = odev(c.odev_id), e = etiket(o, c.parca); gosterilen.add(c.odev_id);
+    (c.durum === "bitti" ? tamam : eksik).push(satir(c.durum === "bitti" ? "tamam" : "yarim", ders(o.ders_id), e.metin, e.alt));
+  }
+  // plandaki kalan görevler
+  for (const t of g0.gorevler || []) {
+    const o = odev(t.odev_id), e = etiket(o, t.parca + (t.parca_sayisi > 1 ? ` (${t.parca_no}/${t.parca_sayisi})` : "")); gosterilen.add(t.odev_id);
+    eksik.push(satir("eksik", ders(t.ders_id), e.metin, e.alt));
+  }
+  // her gün yapılacaklar (kitap okuma vb.)
+  const sabitBitti = new Set(((plan.gun_bilgisi || {})[bugun] || {}).sabit || []);
+  for (const s of g0.sabitler || []) (sabitBitti.has(s.id) ? tamam : eksik).push(satir(sabitBitti.has(s.id) ? "tamam" : "eksik", { ad: "Her gün", renk: "var(--vurgu)" }, s.ad));
+  // bugün teslimi olup yukarıda görünmeyen ödevler
+  for (const o of odevler.filter(o => o.teslim === bugun && !gosterilen.has(o.id)))
+    (o.bitti ? tamam : eksik).push(satir(o.bitti ? "tamam" : "eksik", ders(o.ders_id), o.baslik || "ödev", "📦 bugün teslim"));
+  const top = tamam.length + eksik.length;
+  $("#oz-gorev-sayac").textContent = top ? `${tamam.length}/${top} tamam` : "";
+  kap.innerHTML = top ? `<div class="oz-gorev-cubuk"><i style="width:${Math.round(100 * tamam.length / top)}%"></i></div>
+      <ul class="oz-cl-liste">${eksik.join("")}${tamam.join("")}</ul>` : `<p class="oz-bos">Bugün için görev yok 🎈</p>`;
+  // haftanın görevleri: yarından 6 gün
+  const acik = odevler.filter(o => !o.bitti);
+  hafta.innerHTML = `<div class="oz-hafta-gunler">${plan.gunler.slice(1, 7).map((g, i) => {
+    const teslim = acik.filter(o => o.teslim === g.tarih);
+    const isler = (g.gorevler || []).map(t => { const d = ders(t.ders_id); return `<li style="--r:${esc(d.renk)}"><b>${esc(d.ad)}</b> ${esc(t.parca)}</li>`; });
+    return `<div class="oz-hg${g.ozel ? " ozel" : ""}"><div class="oz-hg-ad"><b>${i === 0 ? "Yarın" : esc(g.gun)}</b><small>${strTarih(g.tarih).getDate()} ${AYLAR[strTarih(g.tarih).getMonth()]}</small></div>
+      <ul>${isler.join("") || `<li class="oz-hg-bos">Serbest 🎈</li>`}</ul>
+      ${teslim.length ? `<div class="oz-hg-teslim">📦 Teslim: ${teslim.map(o => esc(ders(o.ders_id).ad)).join(", ")}</div>` : ""}</div>`;
+  }).join("")}</div>`;
 }
 
 function raporSayfasiCiz() {
