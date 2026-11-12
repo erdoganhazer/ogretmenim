@@ -1,0 +1,58 @@
+/* ÖğretmeniM — mesaj ve duyuru bildirimlerini gönderir (bildirim_kuyrugu).
+   Uygulama her mesajda alıcı için kuyruğa bir kayıt bırakır; yönetici "📣 Bildirim gönder" ile seçtiği kişilere "duyuru" bırakır.
+   GitHub Actions 5 dakikada bir çalıştırır (.github/workflows/mesaj_bildirim.yml). Gönderilen kayıt silinir.
+   Kimlik: GOOGLE_APPLICATION_CREDENTIALS (FIREBASE_SERVICE_ACCOUNT sırrı). Deneme: KURU=1 → göndermez, silmez, yazdırır.
+
+   Güvenlik: kurallar kaydı yalnız gönderenin kendi adına açmasına izin verir; burada ayrıca alıcının gönderenle aynı ailede
+   olduğu ve mesajın ilişkiye uygun olduğu denetlenir (veli → kendi öğrencisi ya da aynı ailenin velisi; öğrenci → kendi velileri). */
+import admin from "firebase-admin";
+import { alicilariBul } from "./alicilar.mjs";
+
+admin.initializeApp({ projectId: process.env.PROJE || "ogretmenim-d0524" });
+const db = admin.firestore(), KURU = process.env.KURU === "1";
+const ESKI_SAAT = 48;                                                  // 2 günden eski, gönderilemeyen kayıt atılır
+
+const kisiOnbellek = new Map();
+async function kisi(id) {
+  if (!id) return null;
+  if (!kisiOnbellek.has(id)) { const s = await db.collection("kisiler").doc(id).get(); kisiOnbellek.set(id, s.exists ? { id, ...s.data() } : null); }
+  return kisiOnbellek.get(id);
+}
+async function ogrencininVelileri(oid) {
+  const s = await db.collection("kisiler").where("ogrenciler", "array-contains", oid).get();
+  return s.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+const kuyruk = await db.collection("bildirim_kuyrugu").orderBy("zaman").limit(200).get();
+let gonderilen = 0, atlanan = 0;
+for (const b of kuyruk.docs) {
+  const k = b.data();
+  const alicilar = await alicilariBul(k, { kisi, ogrencininVelileri });
+  if (!alicilar.length) {
+    atlanan++;
+    console.log("atlandı:", b.id, k.tur, "(uygun alıcı yok)");
+    if (!KURU) await b.ref.delete();
+    continue;
+  }
+  const veri = { baslik: String(k.baslik || "ÖğretmeniM"), metin: String(k.metin || ""), ac: String(k.ac || ""), etiket: `${k.tur}-${b.id.slice(0, 8)}` };
+  for (const a of alicilar) {
+    const cihazlar = (await db.collection("kisiler").doc(a.id).collection("cihazlar").where("aktif", "==", true).get()).docs;
+    if (KURU) { console.log(`${k.tur}: ${k.kimden_ad || k.kimden} → ${a.ad} (${cihazlar.length} cihaz):`, JSON.stringify(veri)); continue; }
+    for (const c of cihazlar) {
+      try {
+        await admin.messaging().send({ token: c.data().token, data: veri, webpush: { headers: { Urgency: "high", TTL: "86400" } } });
+        gonderilen++;
+      } catch (e) {
+        console.warn("gönderilemedi", a.id, c.id, e.code);
+        if (/registration-token-not-registered|invalid-registration-token|invalid-argument/.test(e.code || "")) await c.ref.set({ aktif: false, hata: e.code }, { merge: true });
+      }
+    }
+  }
+  if (!KURU) await b.ref.delete();
+}
+// Takılıp kalan eski kayıtlar (ör. alıcı bulunamayan) temizlenir
+if (!KURU) {
+  const sinir = new Date(Date.now() - ESKI_SAAT * 3600e3).toISOString();
+  for (const d of (await db.collection("bildirim_kuyrugu").where("zaman", "<", sinir).get()).docs) await d.ref.delete();
+}
+console.log(`kuyrukta ${kuyruk.size} kayıt · ${gonderilen} bildirim gönderildi · ${atlanan} atlandı${KURU ? " (KURU: hiçbir şey gönderilmedi/silinmedi)" : ""}`);

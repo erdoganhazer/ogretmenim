@@ -98,6 +98,7 @@ async function ogrenciSecVeBaslat(uygulamayiBaslat) {
   Depo.bulutaBagla(girisEsitleyici);
   girisEsitleyici.dinleyen = () => { if (typeof herSeyiYenile === "function") { yenidenYukle(); } };
   OTURUM.ogrenciAdi = veli ? await Bulut.ogrenciAdi(oid) : k.ad;
+  if (typeof mesajKisileriniBaslat === "function") mesajKisileriniBaslat();   // kişiler + veliler arası sohbet rozetleri
   oturumMenusuKur();
   veliGostergesiCiz();
   girisEkrani(null);
@@ -184,7 +185,7 @@ async function hesaplarAc() {
   hesapFormu(null);
 }
 async function hesapListesiCiz() {
-  try { hesapListesi = await Bulut.hesaplar(); } catch (e) { $("#hesap-liste").textContent = e.message; return; }
+  try { hesapListesi = await Bulut.hesaplar(girisKisi); } catch (e) { $("#hesap-liste").textContent = e.message; return; }
   hesapListesi.sort((a, b) => ["yonetici", "veli", "ogrenci"].indexOf(a.rol) - ["yonetici", "veli", "ogrenci"].indexOf(b.rol) || a.ad.localeCompare(b.ad, "tr"));
   const adi = id => (hesapListesi.find(k => k.id === id) || {}).ad || "?";
   $("#hesap-liste").innerHTML = hesapListesi.map(k => `

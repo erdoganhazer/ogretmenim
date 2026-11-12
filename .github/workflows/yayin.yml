@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
       # Çevrimdışı dosyasına sürüm ve dosya listesi yazılır: her yayın yeni sürüm olur, yüklü uygulamalar kendiliğinden güncellenir
-      - run: python3 araclar/sw_damgala.py web "${GITHUB_SHA::7}"
+      - run: python3 araclar/sw_damgala.py web "${GITHUB_SHA::7}" "$(git log -1 --format=%cI)"
       - uses: actions/upload-pages-artifact@v3
         with: { path: web }
       - id: d

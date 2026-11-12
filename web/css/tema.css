@@ -2169,3 +2169,38 @@ body:not(.veli-modu) .yalniz-veli { display: none !important; }
 .ky-islem { white-space: nowrap; }
 .ky-yeni { color: var(--yazi-soluk); } .ky-ogrendi { color: #22C55E; } .ky-calisiyor { color: #F59E0B; }
 @media (max-width: 900px) { .kd-p { grid-template-columns: 1fr; } .kd-p-form { grid-template-columns: 1fr 1fr; } }
+
+/* Özet › Son notlar: dokunup düzeltilebildiği belli olsun */
+.oz-not-sag { display: inline-flex; align-items: center; gap: 8px; }
+.oz-duzelt { color: var(--yazi-soluk); font-size: 14px; }
+.tikla:hover .oz-duzelt { color: var(--vurgu); }
+
+/* Sürüm satırı: göz yormayan, küçük ve soluk */
+.surum-satir { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; color: var(--yazi-soluk); margin-top: 6px; opacity: .85; }
+.surum-satir .surum-dugme { font-size: 12px; }
+.oturum-surum { border-top: 1px solid var(--cizgi); margin-top: 4px; padding: 8px 10px 2px; }
+
+/* Mesajlar: kişiler satırı (aile sohbeti, öbür veliler, bildirim gönder) */
+.mesaj-kisiler { display: flex; gap: 6px; padding: 0 20px 8px; overflow-x: auto; scrollbar-width: none; }
+.mesaj-kisiler::-webkit-scrollbar { display: none; }
+.mk { position: relative; flex: none; border: 1px solid var(--cizgi); background: var(--zemin-ust); color: var(--yazi-soluk); border-radius: 99px; padding: 6px 12px; font-size: 14px; font-weight: 700; white-space: nowrap; }
+.mk.aktif { background: var(--vurgu); border-color: var(--vurgu); color: #1B2A3B; }
+.mk-nokta { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--uyari); margin-left: 6px; vertical-align: middle; }
+.duyuru-form { display: flex; flex-direction: column; gap: 10px; padding: 4px 20px 18px; }
+.duyuru-form label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--yazi-soluk); }
+.duyuru-kisiler { display: flex; flex-direction: column; gap: 4px; max-height: 40vh; overflow: auto; border: 1px solid var(--cizgi); border-radius: var(--yaricap-k); padding: 6px 10px; }
+.duyuru-kisiler .dk { flex-direction: row; align-items: center; gap: 8px; color: var(--yazi); padding: 4px 0; }
+.dk small { color: var(--yazi-soluk); }
+.dk-cihaz { margin-left: auto; white-space: nowrap; }
+.duyuru-alt { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+@media (max-width: 760px) { .mesaj-kisiler { padding: 0 14px 8px; } .duyuru-form { padding: 4px 14px 14px; } }
+
+/* Kelime listeleri telefonda: defterler üstte yatay kayar, formlar iki sütun */
+@media (max-width: 760px) {
+  .kd-p { grid-template-columns: minmax(0, 1fr); }
+  .kd-p-defterler { flex-direction: row; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+  .kd-p-defterler::-webkit-scrollbar { display: none; }
+  .kd-p-defter { flex: none; max-width: 230px; }
+  .kd-p-form, .ky-defter-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kd-p-form .genis { grid-column: 1 / -1; }
+}

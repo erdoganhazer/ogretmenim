@@ -117,7 +117,10 @@ function kdCtx(d, ad) {
   };
   ctx.kaydet = k => {
     oyunCevapKaydet(ctx.oyun, k, ctx);
-    if (k.kelime && !veliAktif()) kd.kutu[k.kelime] = k.dogru ? Math.min(5, (kd.kutu[k.kelime] || 0) + 1) : 1;
+    if (k.kelime && !veliAktif()) {
+      kd.kutu[k.kelime] = k.dogru ? Math.min(5, (kd.kutu[k.kelime] || 0) + 1) : 1;
+      if (!k.dogru) (kd.zor || (kd.zor = new Set())).add(k.kelime);     // sessiz destek: bu oturumda da daha sık gelsin
+    }
   };
   return ctx;
 }
@@ -133,7 +136,12 @@ function kdSec(havuz, n) {
     for (; i < kalan.length - 1; i++) { r -= kalan[i].w; if (r <= 0) break; }
     sec.push(kalan.splice(i, 1)[0].x);
   }
-  return sec;
+  // Sessiz destek: takıldığı kelimelerden en az ikisi (varsa) her turda bulunur; öğrenciye bir şey söylenmez
+  const zor = kd.zor || new Set(), istenen = Math.min(2, n);
+  const disarida = kalan.map(k => k.x).filter(w => zor.has(w.id));
+  for (let i = sec.length - 1; i >= 0 && disarida.length && sec.filter(w => zor.has(w.id)).length < istenen; i--)
+    if (!zor.has(sec[i].id)) sec.splice(i, 1, disarida.shift());
+  return karistir(sec);
 }
 function kdCeldirici(w, havuz, alan, n = 3) {
   const dogru = alan(w), gorulen = new Set([dogru.toLocaleLowerCase()]);
@@ -247,16 +255,17 @@ async function kdModBaslat(d, mod) {
       if (kdYazilabilir(w) && i % 3 === 2) return { ...kdYazimSorusu(d, w), _g: gosterYazim };
       return secenek[Math.floor(Math.random() * secenek.length)](d, w, celdiriciHavuzu);
     });
-    sonuc = await turOyna(ctx, sorular, dagit, { dogrudaAciklama: true });
+    sonuc = await turOyna(ctx, sorular, dagit, { dogrudaAciklama: true, sessizTekrar: true });
   }
   if (sonuc && !ctx.kapandi) turSonu(ctx, sonuc, { tekrar: () => kdModBaslat(d, mod) });
 }
 
 /* ---------- Kelime kartları (öğrenme; kayıt tutulmaz) ---------- */
+const kdKartOnceligi = w => (kd.zor && kd.zor.has(w.id) ? -2 : (kd.kutu[w.id] ?? -1));   // takıldığı kelimeler en önde
 function kdKartlar(d, havuz) {
   muf.ekran = "kd-kart";
   mufBaslik([d.ad, "Kelime Kartları"]);
-  kd.kart = { sira: havuz.slice().sort((a, b) => (kd.kutu[a.id] ?? -1) - (kd.kutu[b.id] ?? -1) || Math.random() - 0.5), i: 0, acik: false, d };
+  kd.kart = { sira: havuz.slice().sort((a, b) => kdKartOnceligi(a) - kdKartOnceligi(b) || Math.random() - 0.5), i: 0, acik: false, d };
   kdKartCiz();
 }
 function kdKartCiz() {

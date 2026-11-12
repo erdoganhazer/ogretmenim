@@ -32,6 +32,22 @@
 - GitHub 60 gün değişiklik olmayan depoda zamanlanmış işi durdurur: Actions › Veli bildirimleri › Enable workflow.
 - Bildirim gelmiyorsa: cihaz "🔔" mi, saat geçti mi, "Haberim var" denmiş mi, Actions günlüğünde "gönderilemedi" var mı (geçersiz cihaz kendiliğinden kapanır).
 
+## Mesajlar ve bildirim gönderme
+- **Aile sohbeti** (öğrenci ↔ veliler): üstteki 💬. **Veliler arası özel sohbet:** 💬 › kişiler satırında öbür velinin adı. Öğrenci yalnız aile sohbetini görür.
+- **Yönetici bildirimi:** 💬 › **📣 Bildirim gönder** › kişileri seç › mesaj › Gönder. Listede 🔔 olanların bildirimi açık bir cihazı var.
+- Her mesaj ve bildirim `bildirim_kuyrugu`'na düşer; Actions › **"Mesaj bildirimleri"** 5 dakikada bir gönderir (GitHub yoğunken birkaç dakika gecikebilir).
+  Elle deneme: Run workflow › kuru = 1 (göndermez, silmez, günlüğe yazar). Gönderilen kayıt silinir; 2 günden eski takılı kayıt temizlenir.
+- **Öğrenci de mesaj bildirimi alabilir:** öğrenci girişi › ⚙️ Ayarlar › 🔔 Mesaj bildirimleri › Bildirimleri aç.
+- Kişi listesi aynı ailedeki hesaplardan oluşur (`aile` alanı). İlk sürümde açılan yönetici kaydına aile girişte kendiliğinden yazılır;
+  eksik kalan hesaplar yönetici "Hesapları yönet"i açınca tamamlanır.
+- Gönderim izni: sunucu (`araclar/bildirim/alicilar.mjs`) ayrıca denetler: veli → kendi öğrencisi ya da aynı ailenin velisi; öğrenci → kendi velileri;
+  duyuru yalnız yöneticiden. Testi: `node --test test/alicilar_test.mjs`.
+
+## Sürüm ve güncelleme
+- Sürüm, Ayarlar'ın altında ve hesap menüsünün en altında soluk bir satırda: `Sürüm abc1234 · 12 Kas 15:30 · ✓ güncel`.
+- Yeni sürüm yayındaysa aynı satırda **⬆ Güncelle** çıkar; basınca uygulama yeni sürüme geçer. (Kendiliğinden de geçer; düğme beklememek için.)
+- Sürüm = commit'in kısa kimliği; yayında `araclar/sw_damgala.py` yazar (`web/surum.json` yayındaki, `web/js/surum.js` cihazda çalışan sürüm).
+
 ## Uygulamayı yükleme
 - **Android (Chrome/Samsung):** siteyi aç › menü ya da giriş ekranındaki **📲 Uygulamayı yükle** › Yükle. Simge ana ekrana gelir.
 - **iPhone/iPad:** Safari › Paylaş › **Ana Ekrana Ekle** (uygulamadaki 📲 düğmesi adımları gösterir). Ana ekrandan ilk açışta bir kez giriş gerekir.

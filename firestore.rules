@@ -39,6 +39,47 @@ service cloud.firestore {
       allow list: if yonetici();
       allow write: if yonetici();
     }
+    // Kişi listesi: veliler (ve yönetici) aynı ailedeki öbür velileri görür (veliler arası mesaj için). Öğrenciler görmez.
+    function veliRolu(d) { return d.rol in ['veli', 'yonetici']; }
+    match /kisiler/{k} {
+      allow get, list: if aktif() && veliRolu(ben()) && veliRolu(resource.data) && resource.data.aile == ben().aile;
+    }
+
+    // Veliler arası özel sohbet: konusmalar/{a_b} (a < b, iki kişi, ikisi de aynı ailenin velisi). Mesajlar silinmez, değişmez.
+    function kisiBelgesi(id) { return get(/databases/$(database)/documents/kisiler/$(id)).data; }
+    function obur(u) { return u[0] == kisiId() ? u[1] : u[0]; }
+    match /konusmalar/{kid} {
+      allow get, list: if aktif() && kisiId() in resource.data.uyeler;
+      allow create: if aktif() && veliRolu(ben())
+        && request.resource.data.uyeler.size() == 2 && kisiId() in request.resource.data.uyeler
+        && request.resource.data.uyeler[0] < request.resource.data.uyeler[1]
+        && kid == request.resource.data.uyeler[0] + '_' + request.resource.data.uyeler[1]
+        && request.resource.data.aile == ben().aile
+        && veliRolu(kisiBelgesi(obur(request.resource.data.uyeler)))
+        && kisiBelgesi(obur(request.resource.data.uyeler)).aile == ben().aile;
+      allow update: if aktif() && kisiId() in resource.data.uyeler
+        && request.resource.data.uyeler == resource.data.uyeler && request.resource.data.aile == resource.data.aile;
+      allow delete: if false;
+      match /mesajlar/{mid} {
+        allow read: if aktif() && kisiId() in get(/databases/$(database)/documents/konusmalar/$(kid)).data.uyeler;
+        allow create: if aktif() && request.resource.data.kimden == kisiId()
+          && kisiId() in getAfter(/databases/$(database)/documents/konusmalar/$(kid)).data.uyeler
+          && request.resource.data.keys().hasOnly(['kimden', 'metin', 'zaman'])
+          && request.resource.data.metin is string && request.resource.data.metin.size() > 0 && request.resource.data.metin.size() <= 1000;
+        allow update, delete: if false;
+      }
+    }
+
+    // Bildirim kuyruğu: herkes kendi adına "mesaj" bildirimi bırakır, yalnız yönetici "duyuru". Okuyan/silen yalnız sunucu (GitHub'daki iş).
+    match /bildirim_kuyrugu/{id} {
+      allow create: if aktif() && request.resource.data.kimden == kisiId()
+        && request.resource.data.keys().hasOnly(['kimden', 'kimden_ad', 'hedef', 'baslik', 'metin', 'tur', 'ac', 'zaman'])
+        && request.resource.data.metin is string && request.resource.data.metin.size() <= 300
+        && request.resource.data.baslik is string && request.resource.data.baslik.size() <= 80
+        && (request.resource.data.tur == 'mesaj' || (request.resource.data.tur == 'duyuru' && yonetici()));
+      allow read, update, delete: if false;
+    }
+
     // Yönetici ilk kurulum: henüz hiç yönetici yokken ilk hesabın kendini yönetici yapabilmesi için kurulum belgesi
     match /sistem/kurulum {
       allow get: if true;

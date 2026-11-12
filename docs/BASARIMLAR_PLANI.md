@@ -1,4 +1,4 @@
-# Başarımlar planı (henüz uygulanmadı)
+# Başarımlar planı (ertelendi — 12.11.2026: "şu an kurma, sonrası için not al")
 
 Tasarım taslağı: https://claude.ai/artifact/YX36bn1nuDEjoCAcPH7TxV
 
@@ -38,3 +38,15 @@ Tasarım taslağı: https://claude.ai/artifact/YX36bn1nuDEjoCAcPH7TxV
 2. Kural: `basarim/durum` yazma izni.
 3. Bugün şeridi + Başarımlarım sayfası + kutlama.
 4. Veli özet satırı.
+
+## Uygulamadan önce karar verilecekler (12.11.2026 ön incelemesinden)
+- **Yazılı Kahramanı "tamamlanan konu":** öneri — konunun her sorusu en az bir kez cevaplanmış (doğru/yanlış fark etmez; oran ilkesine uyar).
+  Alternatif: uygulamadaki "Hazırsın 🌟" (%85) — ama doğru cevaba bağlı.
+- **Ateş Serisi:** öğrenci `gunluk`'u okuyamaz (kural); seri `plan.calisma` (bitti/yarım), `alistirmalar` ve ödev `bitti_zaman` günlerinden.
+  Öneri: en uzun seri (kazanılan geri alınmaz); planlanmış serbest gün seriyi bozmaz, sayılmaz.
+- **Yazma izni:** veli cihazı da aynı veriyi eşitlediği için `basarim/durum`'a yalnız-ekleme kuralıyla veliye de izin (yoksa velinin toplu yazımı düşer).
+  Kural: `kazanilan` için `diff().removedKeys()` ve `changedKeys()` boş.
+- **Kayıt:** motor verisine `basarim` alanı, `parcala.js` ile `basarim/durum` belgesi (çevrimdışı da çalışır).
+- **Veri:** alıştırmaların tamamı yükleniyor (bulut.js), sayımlar eksik kalmaz. Kelime Ustası = kelime_ozeti kutusu ≥ 4.
+- **Tasarım:** taslaktaki SVG madalyon (renkler: bronz #B8743A, gümüş #9FAFC2, altın #E2A92A; aile simge yolları taslakta).
+- **Test:** Arın'ın gerçek yedeği gelirse beklenen sayılar onunla; yoksa örnek verilerle.

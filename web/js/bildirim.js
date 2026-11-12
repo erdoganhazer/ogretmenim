@@ -74,7 +74,22 @@ async function bildirimAc() {
     if (!mevcut) await Bulut.bildirimAyarYaz(OTURUM.kisi, BILDIRIM_VARSAYILAN);
     bildir("Bu cihaza bildirim gelecek 🔔");
   } catch (h) { bildir("Açılamadı: " + h.message, true); }
-  bildirimCiz();
+  bildirimCiz(); ogrenciBildirimCiz();
+}
+
+/* Öğrenci: yalnız bu cihaza mesaj bildirimi (tercih ve saat yok; mesaj gelince gider) */
+async function ogrenciBildirimCiz() {
+  const kap = $("#ogr-bildirim-ic");
+  if (!kap || veliAktif() || typeof Bulut === "undefined" || !OTURUM.kisi) return;
+  if (typeof FIREBASE_VAPID === "undefined" || !FIREBASE_VAPID) { kap.innerHTML = `<p class="panel-not">Bildirim bu sürümde kurulu değil.</p>`; return; }
+  let cihazlar = [];
+  try { cihazlar = await Bulut.cihazlar(OTURUM.kisi); } catch (_) { /* çevrimdışı */ }
+  const bu = cihazlar.find(c => c.id === localStorage.getItem("ogretmenim-cihaz"));
+  const izin = "Notification" in window ? Notification.permission : "yok", iosUyari = iosMu() && !yukluMu();
+  kap.innerHTML = `${iosUyari ? `<p class="panel-not uyari-not">iPhone/iPad'de önce uygulamayı ana ekrana ekle, sonra oradan aç.</p>` : ""}
+    ${izin === "denied" ? `<p class="panel-not uyari-not">Bu tarayıcıda bildirimler engellenmiş.</p>` : ""}
+    <div class="bl-satir"><b>Bu cihaz</b> <span>${bu && bu.aktif ? "🔔 Açık" : "🔕 Kapalı"}</span>
+      ${bu && bu.aktif ? `<button class="dugme kucuk" data-obl="kapat">Kapat</button>` : `<button class="dugme ana-dugme kucuk" data-obl="ac" ${iosUyari || izin === "denied" ? "disabled" : ""}>Bildirimleri aç</button>`}</div>`;
 }
 
 /* Bildirimdeki "Haberim var" (?haberim=…) ya da açık penceredeki tıklama */
@@ -85,7 +100,25 @@ async function bildirimHaberim(anahtarlar, ogrenci) {
   if (typeof veliOzetCiz === "function") veliOzetCiz();
 }
 
+/* Mesaj bildirimine dokunulunca: "mesaj" → aile sohbeti, "konusma:<a_b>" → o veliyle özel sohbet */
+function bildirimdenAc(ac) {
+  if (typeof mesajPenceresiAc !== "function") return;
+  if (ac === "mesaj") return mesajPenceresiAc("aile");
+  if (ac.startsWith("konusma:")) {
+    const ben = typeof girisKisi !== "undefined" && girisKisi;
+    const diger = ben ? ac.slice(8).split("_").find(x => x !== ben.id) : "";
+    return mesajPenceresiAc(diger || "aile");
+  }
+}
 function bildirimOlaylariniKur() {
+  const ok = $("#ogr-bildirim-ic");
+  if (ok) ok.addEventListener("click", async e => {
+    const b = e.target.closest("[data-obl]");
+    if (!b) return;
+    if (b.dataset.obl === "ac") return bildirimAc();
+    try { await Bulut.cihazYaz(OTURUM.kisi, localStorage.getItem("ogretmenim-cihaz"), { aktif: false }); } catch (h) { bildir(h.message, true); }
+    ogrenciBildirimCiz();
+  });
   const kap = $("#bildirim-ic");
   if (kap) {
     kap.addEventListener("click", async e => {
@@ -111,11 +144,13 @@ function bildirimOlaylariniKur() {
     });
   }
   const q = new URLSearchParams(location.search);
+  if (q.get("ac")) { const ac = q.get("ac"); history.replaceState(null, "", location.pathname + location.hash); setTimeout(() => bildirimdenAc(ac), 1500); }
   if (q.get("haberim")) { bildirimHaberim(q.get("haberim"), q.get("ogrenci")); history.replaceState(null, "", location.pathname + location.hash); }
   if (navigator.serviceWorker) navigator.serviceWorker.addEventListener("message", e => {
     const v = e.data || {};
     if (v.tur !== "bildirim") return;
     if (v.eylem === "haberim") bildirimHaberim(v.anahtarlar, v.ogrenci);
+    else if (v.ac) bildirimdenAc(v.ac);
     else if (veliAktif()) sayfaAc("ozet");
   });
 }

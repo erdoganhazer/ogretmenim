@@ -96,25 +96,22 @@ function yaziliHazirlikHtml(yz, kacis) {
           </td></tr>` : ""}`).join("")}
       </tbody></table></details>`).join("")}</div>`;
 }
-/* 0.25: Kelime Defterim (veli). kz = motor kelime_ozeti(). Kutu 4–5 = öğrendi (art arda doğru cevaplar). */
-function kelimeDefteriHtml(kz, kacis) {
-  const e = kacis;
-  if (!kz || !kz.defterler || !kz.defterler.length) return "";
-  return `<div class="gl-yz"><h4 class="gl-yz-baslik">📚 Kelime Defterim <small>Öğrendi = son cevaplarının art arda en az 4'ü doğru · yanlışta kelime başa döner</small></h4>
-    <div class="gl-yz-kartlar">${kz.defterler.map(d => `<div class="gl-yz-kart">
-      <b>${e(d.simge || "")} ${e(d.ad)}</b><small>${d.kelime} kelime</small>
-      <span>${gelisimCubuk(d.kelime ? Math.round(100 * d.ogrendi / d.kelime) : 0)} <b>${d.ogrendi}</b> öğrendi</span>
-      <small>${d.calisiyor} çalışıyor · ${d.yeni} yeni${d.oran != null ? ` · doğruluk %${d.oran}` : ""}</small></div>`).join("")}</div>
-    <p class="panel-not">Kelime kelime ayrıntı gösterilmez: uygulama takıldığı kelimeleri kendisi bilir ve onları daha sık sorar.</p></div>`;
-}
 /* GELISIM_ORTAK_BIT */
 
+/* Veli istatistiklerinde kelime bölümü gösterilmez (12.11.2026): kelime aracı takıldığı kelimeleri kendisi sessizce destekler.
+   Motor özeti değişmez (Python motoruyla karşılaştırmalı test); yalnız gösterimden çıkarılır. */
+function kelimesiz(g) {
+  if (!g || !g.dersler || !g.dersler.kelime) return g;
+  const { kelime, ...dersler } = g.dersler;
+  return { ...g, dersler, toplam: Math.max(0, (g.toplam || 0) - (kelime.deneme || 0)),
+    destek: (g.destek || []).filter(x => x.ders_kod !== "kelime"), guclu: (g.guclu || []).filter(x => x.ders_kod !== "kelime") };
+}
 async function gelisimCiz() {
   const kap = $("#gelisim");
   if (!kap || !veliAktif()) return;
   try {
-    const [g, yz, kz] = await Promise.all([api("GET", "gelisim"), api("GET", "yazili").catch(() => null), api("GET", "kelime/ozet").catch(() => null)]);
-    kap.innerHTML = yaziliHazirlikHtml(yz, esc) + kelimeDefteriHtml(kz, esc) + gelisimHtml(g, esc);
+    const [g, yz] = await Promise.all([api("GET", "gelisim"), api("GET", "yazili").catch(() => null)]);
+    kap.innerHTML = yaziliHazirlikHtml(yz, esc) + gelisimHtml(kelimesiz(g), esc);
   } catch (hata) { kap.innerHTML = `<div class="gl-bos">Gelişim bilgisi alınamadı: ${esc(hata.message)}</div>`; }
 }
 function gelisimOlaylariniKur() {

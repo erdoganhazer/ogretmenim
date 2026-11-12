@@ -67,6 +67,7 @@
       <button type="button" data-uygulama-yukle hidden>📲 Uygulamayı yükle</button>
       <button type="button" id="oturum-sifre">🔑 Şifremi değiştir</button>
       <button type="button" id="oturum-cikis">🚪 Çıkış</button>
+      <div class="surum-satir oturum-surum" data-surum-kutu><span data-surum-yazi></span> <button type="button" class="baglanti surum-dugme" data-surum-dugme hidden></button></div>
     </div>
   </div>
   <div class="veli-gosterge" id="veli-gosterge" hidden><span id="veli-kalan"></span><button id="veli-kilitle" hidden></button></div>
@@ -305,9 +306,15 @@
         </div>
       </div>
 
+      <div class="panel form yalniz-ogrenci" id="ogr-bildirim">
+        <div class="panel-baslik">🔔 Mesaj bildirimleri <span class="panel-alt">Annenden ya da babandan mesaj gelince haber verir</span></div>
+        <div id="ogr-bildirim-ic"></div>
+      </div>
+
       <div class="panel form hakkinda" id="hakkinda">
         <img src="img/logo.png" alt="" id="gizli-giris" draggable="false">
-        <div><b>ÖğretmeniM</b><small id="surum-yazi"></small><small>Ödevlerin, derslerin ve defterlerin hep yanında. 🌟</small></div>
+        <div><b>ÖğretmeniM</b><small>Ödevlerin, derslerin ve defterlerin hep yanında. 🌟</small>
+          <div class="surum-satir" data-surum-kutu><span data-surum-yazi>Sürüm…</span> <button type="button" class="baglanti surum-dugme" data-surum-dugme hidden></button></div></div>
       </div>
 
       <div class="veli-ozel" id="veli-ayarlari">
@@ -565,6 +572,14 @@
 
 <dialog class="pencere mesaj-pencere" id="mesaj-pencere">
   <div class="pencere-ust hm-ust"><h2 id="mesaj-baslik">💬 Mesajlar</h2><button type="button" class="kapat-dugme" id="mesaj-kapat" title="Kapat">✕</button></div>
+  <div class="mesaj-kisiler" id="mesaj-kisiler" hidden></div>
+  <form class="duyuru-form" id="duyuru-form" autocomplete="off" hidden>
+    <p class="panel-not">Seçtiğin kişilere bildirim gider (en çok 5 dakika içinde). Kişinin bildirimi açık bir cihazı olmalı: 🔔 olanlara ulaşır.</p>
+    <div class="duyuru-kisiler" id="duyuru-kisiler"></div>
+    <label>Başlık <input name="baslik" maxlength="60" placeholder="ÖğretmeniM"></label>
+    <label>Mesaj <textarea name="metin" rows="3" maxlength="300" required placeholder="Ne söylemek istiyorsun?"></textarea></label>
+    <div class="duyuru-alt"><span class="durum-yazi" id="duyuru-durum"></span><button type="submit" class="dugme ana-dugme">📣 Gönder</button></div>
+  </form>
   <div class="mesaj-listesi" id="mesaj-listesi"></div>
   <form class="mesaj-yaz" id="mesaj-form" autocomplete="off">
     <div class="mesaj-tur" id="mesaj-tur"><button type="button" data-tur="mesaj" class="aktif">💬 Mesaj</button><button type="button" data-tur="istek">🙋 İstek</button></div>
@@ -635,6 +650,7 @@
 <script src="js/ogrenci_dosyasi.js"></script>
 <script src="js/bildirim.js"></script>
 <script src="js/giris.js"></script>
+<script src="js/surum.js"></script>
 <script src="js/app.js"></script>
 <script src="js/uygulama.js"></script>
 </body>

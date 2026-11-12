@@ -28,6 +28,7 @@ self.addEventListener("fetch", olay => {
   if (!DAMGALI || istek.method !== "GET") return;
   const adres = new URL(istek.url);
   if (adres.origin !== location.origin) return;                       // Firebase vb. dokunma
+  if (adres.pathname.endsWith("/surum.json")) return;                 // yayındaki sürüm: hep ağdan (güncellik denetimi)
   olay.respondWith((async () => {
     const onbellek = await caches.open(ONBELLEK);
     if (istek.mode === "navigate") {                                  // sayfa açılışı: hep uygulama kabuğu
@@ -53,14 +54,16 @@ self.addEventListener("push", olay => {
   const kok = self.registration.scope;
   olay.waitUntil(self.registration.showNotification(d.baslik || "ÖğretmeniM", {
     body: d.metin || "", icon: kok + "img/uygulama-192.png", badge: kok + "img/uygulama-192.png", tag: d.etiket || "ogretmenim",
-    renotify: true, data: { ogrenci: d.ogrenci || "", anahtarlar: d.anahtarlar || "" },
+    renotify: true, data: { ogrenci: d.ogrenci || "", anahtarlar: d.anahtarlar || "", ac: d.ac || "" },
     actions: d.anahtarlar ? [{ action: "haberim", title: "✓ Haberim var" }, { action: "ac", title: "Aç" }] : [],
   }));
 });
 self.addEventListener("notificationclick", olay => {
   olay.notification.close();
   const v = olay.notification.data || {}, kok = self.registration.scope;
-  const adres = kok + (olay.action === "haberim" ? `?haberim=${encodeURIComponent(v.anahtarlar)}&ogrenci=${encodeURIComponent(v.ogrenci)}` : `?ogrenci=${encodeURIComponent(v.ogrenci || "")}`) + "#ozet";
+  // Mesaj bildirimi (ac: "mesaj" ya da "konusma:<kimlik>") uygulamayı ilgili sohbetle açar
+  const adres = kok + (olay.action === "haberim" ? `?haberim=${encodeURIComponent(v.anahtarlar)}&ogrenci=${encodeURIComponent(v.ogrenci)}#ozet`
+    : v.ac ? `?ac=${encodeURIComponent(v.ac)}` : `?ogrenci=${encodeURIComponent(v.ogrenci || "")}#ozet`);
   olay.waitUntil((async () => {
     const pencereler = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     for (const p of pencereler) if (p.url.startsWith(kok)) { await p.focus(); p.postMessage({ tur: "bildirim", eylem: olay.action, ...v }); return; }

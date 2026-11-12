@@ -97,8 +97,8 @@ async function veliOzetCiz() {
         ${kod && hazir[kod] !== undefined ? `<span class="oz-hazir" title="Yazılı hazırlık">%${hazir[kod]} hazır</span>` : ""}</li>`;
     }).join("")}</ul>` : `<p class="oz-bos">Yaklaşan sınav yok.</p>`;
   const notlu = sinavlar.filter(s => typeof s.puan === "number").sort((a, b) => b.tarih.localeCompare(a.tarih)).slice(0, 5);
-  $("#oz-notlar").innerHTML = notlu.length ? `<ul class="ds-liste">${notlu.map(s => `<li class="tikla" data-oz-sinav="${s.id}"><span>${esc(dersAdiBul(s.ders_id))} <small>${tarihYaz(s.tarih)}</small></span>
-      <span class="not-rozet ${notSinifi(s.puan)}">${s.puan}</span></li>`).join("")}</ul>` : `<p class="oz-bos">Henüz not girilmedi.</p>`;
+  $("#oz-notlar").innerHTML = notlu.length ? `<ul class="ds-liste">${notlu.map(s => `<li class="tikla" data-oz-sinav="${s.id}" title="Notu düzeltmek için dokun"><span>${esc(dersAdiBul(s.ders_id))} <small>${tarihYaz(s.tarih)}</small></span>
+      <span class="oz-not-sag"><span class="not-rozet ${notSinifi(s.puan)}">${s.puan}</span><span class="oz-duzelt" aria-hidden="true">✎</span></span></li>`).join("")}</ul>` : `<p class="oz-bos">Henüz not girilmedi.</p>`;
 }
 
 function raporSayfasiCiz() {

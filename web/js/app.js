@@ -42,7 +42,7 @@ async function sayfaAc(ad) {
   $$(".sayfa").forEach(s => s.classList.toggle("aktif", s.id === "sayfa-" + ad));
   $(".sayfalar").scrollTop = 0;
   window.scrollTo(0, 0);                                   // telefonda sayfanın kendisi kayar
-  if (ad === "ayarlar") { $("#surum-yazi").textContent = "Sürüm " + (durum.surum || ""); veliAyarlariniCiz(); }
+  if (ad === "ayarlar") { if (typeof surumDenetle === "function") surumDenetle(); veliAyarlariniCiz(); if (typeof ogrenciBildirimCiz === "function") ogrenciBildirimCiz(); }
   if (ad === "cep") cepCiz();
   if (ad === "program") programSayfasiCiz();
   if (ad === "dersler") derslerSayfasiCiz();
@@ -196,7 +196,7 @@ async function basla() {
   try {
     durum.veri = await api("GET", "veri");
     durum.surum = (await api("GET", "durum")).surum;
-    $("#marka-surum").textContent = durum.surum === "web" ? "" : "v" + durum.surum;
+    $("#marka-surum").textContent = UYGULAMA_SURUMU.surum || "";
   } catch (hata) {
     bildir("Motora ulaşılamadı: " + hata.message, true);
     return;

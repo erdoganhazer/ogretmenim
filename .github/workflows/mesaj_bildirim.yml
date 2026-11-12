@@ -1,0 +1,25 @@
+name: Mesaj bildirimleri
+# 5 dakikada bir: uygulamanın bildirim_kuyrugu'na bıraktığı mesaj ve duyuru bildirimlerini gönderir (araclar/bildirim/mesaj_gonder.mjs).
+# Not: GitHub zamanlanmış işleri yoğunlukta birkaç dakika geciktirebilir; depoda 60 gün değişiklik olmazsa durdurur (Actions › Enable workflow).
+on:
+  schedule: [{ cron: "*/5 * * * *" }]
+  workflow_dispatch:
+    inputs:
+      kuru: { description: "Göndermeden dene (1)", default: "0" }
+permissions: { contents: read }
+concurrency: { group: mesaj-bildirim, cancel-in-progress: false }
+jobs:
+  gonder:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: google-github-actions/auth@v2
+        with: { credentials_json: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" }
+      - run: npm install --no-audit --no-fund
+        working-directory: araclar/bildirim
+      - run: node mesaj_gonder.mjs
+        working-directory: araclar/bildirim
+        env: { KURU: "${{ github.event.inputs.kuru || '0' }}" }

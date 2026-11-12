@@ -3,7 +3,7 @@
 import { test, before, after, beforeEach } from "node:test";
 import { readFileSync } from "node:fs";
 import { initializeTestEnvironment, assertFails, assertSucceeds } from "@firebase/rules-unit-testing";
-import { doc, getDoc, setDoc, updateDoc, getDocs, collection, writeBatch, arrayUnion } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, getDocs, collection, writeBatch, arrayUnion, query, where, deleteDoc } from "firebase/firestore";
 
 let env;
 const YON = "k_yonetici", VELI = "k_veli", ARIN = "k_arin", ELIF = "k_elif", KAPALI = "k_kapali";
@@ -148,4 +148,64 @@ test("ilk kurulum yalnız bir kez yapılır", async () => {
   const d2 = db("u_ikinci");
   await assertFails(setDoc(doc(d2, "sistem/kurulum"), { yonetici_uid: "u_ikinci", yonetici_kisi: "k2", zaman: "z" }));
   await assertFails(setDoc(doc(d2, "uidler/u_ikinci"), { kisi: "k_ilk" }));
+});
+
+/* Veliler arası mesaj, kişi listesi ve bildirim kuyruğu (12.11.2026) */
+async function aileKur() {
+  await env.withSecurityRulesDisabled(async c => {
+    const d = c.firestore();
+    await updateDoc(doc(d, `kisiler/${YON}`), { aile: "aile-1" });
+    await updateDoc(doc(d, `kisiler/${VELI}`), { aile: "aile-1" });
+    await updateDoc(doc(d, `kisiler/${ARIN}`), { aile: "aile-1" });
+    await setDoc(doc(d, "uidler/u_yabanci"), { kisi: "k_yabanci" });
+    await setDoc(doc(d, "kisiler/k_yabanci"), { ad: "Başka aile", rol: "veli", aktif: true, ogrenciler: [], aile: "aile-2" });
+  });
+}
+const KID = [YON, VELI].sort().join("_");
+const konusma = (kimden) => ({ uyeler: [YON, VELI].sort(), aile: "aile-1", son: { metin: "selam", kimden, zaman: "z" }, okunan: { [kimden]: "z" } });
+test("kişi listesi: veli aynı ailedeki velileri görür, öğrenciyi ve başka aileyi listeleyemez", async () => {
+  await aileKur();
+  const v = db("u_veli");
+  await assertSucceeds(getDocs(query(collection(v, "kisiler"), where("aile", "==", "aile-1"), where("rol", "in", ["veli", "yonetici"]))));
+  await assertSucceeds(getDoc(doc(v, `kisiler/${YON}`)));
+  await assertFails(getDocs(query(collection(v, "kisiler"), where("aile", "==", "aile-2"), where("rol", "in", ["veli", "yonetici"]))));
+  await assertFails(getDoc(doc(v, "kisiler/k_yabanci")));
+  await assertFails(getDocs(query(collection(db("u_arin"), "kisiler"), where("aile", "==", "aile-1"), where("rol", "in", ["veli", "yonetici"]))));
+});
+test("veliler arası sohbet: yalnız iki üye okur/yazar, mesaj değişmez, başka aileyle açılamaz", async () => {
+  await aileKur();
+  const v = db("u_veli"), b = writeBatch(v);
+  b.set(doc(v, `konusmalar/${KID}`), konusma(VELI), { merge: true });
+  b.set(doc(v, `konusmalar/${KID}/mesajlar/m1`), { kimden: VELI, metin: "selam", zaman: "z" });
+  await assertSucceeds(b.commit());
+  await assertSucceeds(getDoc(doc(db("u_yon"), `konusmalar/${KID}/mesajlar/m1`)));
+  await assertSucceeds(getDocs(query(collection(db("u_yon"), "konusmalar"), where("uyeler", "array-contains", YON))));
+  await assertSucceeds(setDoc(doc(db("u_yon"), `konusmalar/${KID}`), { okunan: { [YON]: "z2" } }, { merge: true }));
+  await assertFails(getDoc(doc(db("u_arin"), `konusmalar/${KID}/mesajlar/m1`)));                     // öğrenci okuyamaz
+  await assertFails(getDoc(doc(db("u_yabanci"), `konusmalar/${KID}`)));
+  await assertFails(updateDoc(doc(v, `konusmalar/${KID}/mesajlar/m1`), { metin: "değişti" }));
+  await assertFails(deleteDoc(doc(v, `konusmalar/${KID}/mesajlar/m1`)));
+  await assertFails(setDoc(doc(v, `konusmalar/${KID}/mesajlar/m2`), { kimden: YON, metin: "sahte", zaman: "z" }));   // başkası adına
+  await assertFails(setDoc(doc(v, `konusmalar/${KID}`), { uyeler: [VELI, "k_yabanci"].sort() }, { merge: true }));    // üyeler değişmez
+  const yab = ["k_yabanci", VELI].sort();
+  await assertFails(setDoc(doc(v, `konusmalar/${yab.join("_")}`), { uyeler: yab, aile: "aile-1", son: {}, okunan: {} }));   // başka aile
+  const ogr = [ARIN, VELI].sort();
+  await assertFails(setDoc(doc(v, `konusmalar/${ogr.join("_")}`), { uyeler: ogr, aile: "aile-1", son: {}, okunan: {} }));   // öğrenciyle özel sohbet yok
+});
+test("bildirim kuyruğu: kendi adına mesaj bırakılır, duyuruyu yalnız yönetici bırakır, kimse okuyamaz", async () => {
+  await aileKur();
+  const kayit = (kimden, tur) => ({ kimden, kimden_ad: "x", hedef: { kisi: ARIN }, baslik: "💬 x", metin: "selam", tur, ac: "mesaj", zaman: "z" });
+  await assertSucceeds(setDoc(doc(db("u_veli"), "bildirim_kuyrugu/b1"), kayit(VELI, "mesaj")));
+  await assertSucceeds(setDoc(doc(db("u_arin"), "bildirim_kuyrugu/b2"), { ...kayit(ARIN, "mesaj"), hedef: { ogrenci_velileri: ARIN } }));
+  await assertFails(setDoc(doc(db("u_veli"), "bildirim_kuyrugu/b3"), kayit(YON, "mesaj")));          // başkası adına
+  await assertFails(setDoc(doc(db("u_veli"), "bildirim_kuyrugu/b4"), kayit(VELI, "duyuru")));        // duyuru yalnız yönetici
+  await assertSucceeds(setDoc(doc(db("u_yon"), "bildirim_kuyrugu/b5"), kayit(YON, "duyuru")));
+  await assertFails(setDoc(doc(db("u_veli"), "bildirim_kuyrugu/b6"), { ...kayit(VELI, "mesaj"), metin: "x".repeat(301) }));
+  await assertFails(getDoc(doc(db("u_yon"), "bildirim_kuyrugu/b1")));
+  await assertFails(deleteDoc(doc(db("u_veli"), "bildirim_kuyrugu/b1")));
+  await assertFails(setDoc(doc(db("u_kapali"), "bildirim_kuyrugu/b7"), kayit(KAPALI, "mesaj")));     // kapalı hesap
+});
+test("öğrenci kendi cihazını bildirim için kaydeder", async () => {
+  await assertSucceeds(setDoc(doc(db("u_arin"), `kisiler/${ARIN}/cihazlar/c1`), { token: "t", aktif: true }));
+  await assertFails(setDoc(doc(db("u_arin"), `kisiler/${VELI}/cihazlar/c1`), { token: "t", aktif: true }));
 });

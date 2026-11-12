@@ -30,6 +30,47 @@
     });
   }
 
+  /* ---------- Sürüm ve güncellik ----------
+     Çalışan sürüm js/surum.js'te (uygulamayla birlikte önbellekte), yayındaki en son sürüm surum.json'da (hep ağdan okunur).
+     Ayarlar'ın altında ve hesap menüsünde soluk bir satırda gösterilir; yeni sürüm varsa "Güncelle" düğmesi çıkar. */
+  const calisan = (typeof UYGULAMA_SURUMU !== "undefined" && UYGULAMA_SURUMU) || {};
+  const AYLAR_KISA = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
+  const tarihYazi = t => { const d = new Date(t); return isNaN(d) ? "" : `${d.getDate()} ${AYLAR_KISA[d.getMonth()]} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
+  function surumCiz(durumYazi, dugme) {
+    const ad = calisan.surum ? `Sürüm ${calisan.surum}${calisan.tarih ? " · " + tarihYazi(calisan.tarih) : ""}` : "Sürüm: geliştirme";
+    document.querySelectorAll("[data-surum-yazi]").forEach(s => { s.textContent = ad + (durumYazi ? " · " + durumYazi : ""); });
+    document.querySelectorAll("[data-surum-dugme]").forEach(b => { b.hidden = !dugme; b.textContent = dugme || ""; });
+  }
+  let denetleniyor = false, sonDenetim = 0;
+  async function surumDenetle(zorla = true) {
+    if (denetleniyor || (!zorla && Date.now() - sonDenetim < 60000)) return;
+    sonDenetim = Date.now();
+    if (!calisan.surum) return surumCiz("", "");
+    if (!navigator.onLine) return surumCiz("çevrimdışı", "");
+    denetleniyor = true; surumCiz("denetleniyor…", "");
+    try {
+      const r = await fetch("surum.json?t=" + Date.now(), { cache: "no-store" });
+      const yayinda = await r.json();
+      if (!yayinda.surum || yayinda.surum === calisan.surum) surumCiz("✓ güncel", "");
+      else surumCiz("yeni sürüm var", "⬆ Güncelle");
+    } catch (_) { surumCiz("denetlenemedi", "Yeniden dene"); }
+    denetleniyor = false;
+  }
+  async function guncelle() {
+    surumCiz("güncelleniyor…", "");
+    try { const k = navigator.serviceWorker && await navigator.serviceWorker.getRegistration(); if (k) await k.update(); } catch (_) { /* yine de yenile */ }
+    setTimeout(() => location.reload(), 1500);                       // yeni dosyalar inmiş olur; inmediyse tarayıcı ağdan alır
+  }
+  window.surumDenetle = surumDenetle;
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-surum-dugme]");
+    if (!b) return;
+    if (b.textContent.includes("Güncelle")) guncelle(); else surumDenetle();
+  });
+  document.addEventListener("DOMContentLoaded", () => { surumCiz("", ""); setTimeout(surumDenetle, 4000); });
+  addEventListener("online", () => surumDenetle(false));
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") surumDenetle(false); });
+
   /* ---------- "Uygulamayı yükle" ---------- */
   addEventListener("beforeinstallprompt", e => { e.preventDefault(); bekleyen = e; if (!yuklu()) goster(true); });
   addEventListener("appinstalled", () => { bekleyen = null; goster(false); });

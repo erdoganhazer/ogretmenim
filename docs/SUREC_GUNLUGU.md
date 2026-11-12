@@ -74,3 +74,19 @@
 - Testler: motor karşılaştırma 726 adım 0 fark (web'e özgü `icerik`, `ders_notlari` hariç), parça gidiş-dönüş, içe aktarım, uyarı kuralları; kurallar testine
   `sinav_notlari`, `veli/`, `kisiler/*/cihazlar` eklendi. Uçtan uca: sahte Firebase ile kurulum → hesaplar + paket → eski zip aktarımı → veli Özet/Dersler/Rapor/
   bildirim → öğrenci (notlu etkinlik 0) → ders notu → telefon görünümü; konsol hatası yok.
+
+## 12.11.2026 — Mesajlaşma, bildirim gönderme, sürüm, küçük düzeltmeler
+- **Veliler arası özel sohbet:** `konusmalar/{a_b}` (a < b) + `mesajlar/`; yalnız iki üye okur/yazar, mesaj değişmez/silinmez, yalnız aynı ailenin
+  velileri arasında. Kişi listesi: veliler aynı ailedeki öbür velileri görür (kural `kisiler` get/list). Mesaj penceresine kişiler satırı.
+- **Bildirim kuyruğu:** `bildirim_kuyrugu/{id}` — herkes kendi adına "mesaj", yalnız yönetici "duyuru" bırakır; kimse okuyamaz.
+  Gönderen: `araclar/bildirim/mesaj_gonder.mjs` (`.github/workflows/mesaj_bildirim.yml`, 5 dakikada bir; depo açık olduğu için Actions ücretsiz).
+  Alıcı/ilişki denetimi `alicilar.mjs` (6 test). Anlık gönderim istenirse yalnız gönderen değişir (Firebase Blaze + Cloud Functions ya da Worker).
+- **Öğrenci cihazı** mesaj bildirimi için kaydolabilir (Ayarlar). Bildirime dokununca ilgili sohbet açılır (`?ac=mesaj` / `?ac=konusma:<id>`).
+- **Sürüm göstergesi + Güncelle:** `surum.json` hep ağdan, `js/surum.js` önbellekte; denendi: güncel → yeni sürüm → Güncelle → yeni sürümde güncel.
+- **Not düzeltme:** zaten mümkündü (Özet › Son notlar, Dersler tablosu, ders sayfası); Özet'te ✎ işareti eklendi. Uçtan uca: 80 → 95, `sinav_notlari` güncellendi.
+- **Veli istatistiklerinden kelime bölümü kaldırıldı** (Kelime Defterim kartları ve gelişimdeki "kelime" dersi; motor özeti aynı kaldı).
+- **Kelime aracı sessiz destek:** yanlış cevaplanan kelime aynı oturumda da ağırlık kazanır, her turda takıldığı kelimelerden en az ikisi bulunur,
+  yanlış soru turda "bir daha deneyelim" yazmadan birkaç soru sonra yeniden gelir, kartlarda takıldığı kelimeler önde.
+- Kelime listeleri paneli telefonda taşıyordu (240 px sütun): tek sütun, defterler yatay kayar.
+- Sahte Firebase'in koleksiyon dinlemesi gerçek QuerySnapshot gibi `docs` da veriyor.
+- Kural testleri yerelde de çalışıyor (Java 21 + emülatör): 19/19. Başarımlar ertelendi (BASARIMLAR_PLANI.md'ye kararlar not edildi).

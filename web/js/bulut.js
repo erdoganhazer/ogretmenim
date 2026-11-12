@@ -43,6 +43,10 @@ const Bulut = (() => {
     if (!k.exists()) return null;
     const kisi = Object.assign({ id: k.id }, k.data());
     if (!kisi.aktif) { await FB.signOut(auth); throw new Error("Bu hesap kapatılmış. Yöneticiye sor."); }
+    if (!kisi.aile && kisi.rol === "yonetici") {                       // ilk sürümlerde açılan yönetici kaydında aile yoktu
+      kisi.aile = "aile-" + kisi.id.slice(0, 8);
+      try { await FB.updateDoc(D("kisiler", kisi.id), { aile: kisi.aile }); } catch (_) { /* sonra yeniden denenir */ }
+    }
     return kisi;
   }
   function oturumuBekle() {
@@ -103,9 +107,13 @@ const Bulut = (() => {
       return c.user.uid;
     } finally { await FB.deleteApp(ikinci); }
   }
-  async function hesaplar() {
+  async function hesaplar(ben) {
     const s = await FB.getDocs(C("kisiler"));
-    return s.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    const liste = s.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    // aile alanı eksik eski kayıtlar yöneticinin ailesine bağlanır (kişi listesi ve mesaj kuralları için)
+    const aile = ben && (ben.aile || "aile-" + ben.id.slice(0, 8));
+    if (aile) for (const k of liste.filter(k => !k.aile)) { k.aile = aile; try { await FB.updateDoc(D("kisiler", k.id), { aile }); } catch (_) { /* sonra */ } }
+    return liste;
   }
   /* rol: ogrenci | veli | yonetici. Öğrenci açılınca veri belgesi de açılır ve yönetici ona veli olarak atanır. */
   async function hesapAc(ben, { ad, kullanici, sifre, rol, ogrenciler = [] }) {
@@ -192,6 +200,48 @@ const Bulut = (() => {
     return FB.getToken(FB.getMessaging(app), { vapidKey: vapid, serviceWorkerRegistration: kayit });
   }
 
+  /* ---------- kişiler, veliler arası sohbet, bildirim kuyruğu ----------
+     Veliler (ve yönetici) aynı ailedeki öbür velileri görür ve onlarla özel sohbet açar: konusmalar/{a_b} (a < b), mesajlar altında.
+     Mesaj gönderilince bildirim_kuyrugu'na bir kayıt düşer; GitHub'daki zamanlanmış iş (araclar/bildirim/mesaj_gonder.mjs) alıcının
+     cihazlarına bildirim gönderir ve kaydı siler. Yönetici kuyruğa "duyuru" da yazabilir (seçtiği kişilere bildirim). */
+  async function kisilerim(ben) {
+    if (ben.rol === "yonetici") return (await hesaplar(ben)).filter(k => k.id !== ben.id && k.aktif);
+    if (ben.rol !== "veli" || !ben.aile) return [];
+    const s = await FB.getDocs(FB.query(C("kisiler"), FB.where("aile", "==", ben.aile), FB.where("rol", "in", ["veli", "yonetici"])));
+    return s.docs.map(d => Object.assign({ id: d.id }, d.data())).filter(k => k.id !== ben.id && k.aktif && k.aile === ben.aile && ["veli", "yonetici"].includes(k.rol));
+  }
+  const konusmaKimligi = (a, b) => [a, b].sort().join("_");
+  function konusmalarimiDinle(ben, cb) {
+    baslat();
+    return FB.onSnapshot(FB.query(C("konusmalar"), FB.where("uyeler", "array-contains", ben.id)),
+      s => cb(s.docs.map(d => Object.assign({ id: d.id }, d.data()))), () => cb([]));
+  }
+  function konusmaDinle(kid, cb) {
+    return FB.onSnapshot(C("konusmalar", kid, "mesajlar"),
+      s => cb(s.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => (a.zaman < b.zaman ? -1 : a.zaman > b.zaman ? 1 : 0))), () => cb([]));
+  }
+  function kuyrukKaydi(b, ben, { hedef, baslik, metin, tur = "mesaj", ac = "" }) {
+    b.set(D("bildirim_kuyrugu", yeniId()), { kimden: ben.id, kimden_ad: ben.ad || "", hedef, baslik: String(baslik).slice(0, 80),
+      metin: String(metin).slice(0, 300), tur, ac: String(ac).slice(0, 120), zaman: new Date().toISOString() });
+  }
+  async function konusmaMesaji(ben, diger, metin) {
+    const kid = konusmaKimligi(ben.id, diger.id), zaman = new Date().toISOString(), b = FB.writeBatch(db);
+    b.set(D("konusmalar", kid), { uyeler: [ben.id, diger.id].sort(), aile: ben.aile, son: { metin: metin.slice(0, 120), kimden: ben.id, zaman },
+      okunan: { [ben.id]: zaman } }, { merge: true });
+    b.set(D("konusmalar", kid, "mesajlar", yeniId()), { kimden: ben.id, metin, zaman });
+    kuyrukKaydi(b, ben, { hedef: { kisi: diger.id }, baslik: `💬 ${ben.ad || "Mesaj"}`, metin, ac: "konusma:" + kid });
+    try { await b.commit(); } catch (e) { throw new Error(hataMetni(e)); }
+    return kid;
+  }
+  async function konusmaOkundu(ben, kid) {
+    try { await FB.setDoc(D("konusmalar", kid), { okunan: { [ben.id]: new Date().toISOString() } }, { merge: true }); } catch (_) { /* sonra */ }
+  }
+  /* Bildirim kuyruğu: hedef { kisi: id } ya da { ogrenci_velileri: oid } (öğrencinin velileri, gönderen hariç) */
+  async function bildirimKuyruga(ben, kayit) {
+    const b = FB.writeBatch(db); kuyrukKaydi(b, ben, kayit);
+    try { await b.commit(); } catch (e) { throw new Error(hataMetni(e)); }
+  }
+
   /* ---------- öğrenci verisinin eşitlenmesi ----------
      Motor tek veri nesnesiyle çalışır; her istekten sonra değişen belgeler toplu yazılır, başka cihazdan gelen değişiklikler
      anında veriye işlenir. Firestore'un yerel önbelleği sayesinde internetsiz de çalışır, bağlantı gelince gönderir. */
@@ -274,7 +324,8 @@ const Bulut = (() => {
     kapat() { this.kapatlar.forEach(f => f()); this.kapatlar = []; }
   }
 
-  return { bilinenler, haberimVar, icerikGetir, icerikAta, bildirimAyarOku, bildirimAyarYaz, cihazlar, cihazYaz, bildirimTokeni, bugunStr,
+  return { kisilerim, konusmaKimligi, konusmalarimiDinle, konusmaDinle, konusmaMesaji, konusmaOkundu, bildirimKuyruga,
+    bilinenler, haberimVar, icerikGetir, icerikAta, bildirimAyarOku, bildirimAyarYaz, cihazlar, cihazYaz, bildirimTokeni, bugunStr,
     baslat, oturumuBekle, kimim, girisYap, cikisYap, kurulumVarMi, ilkKurulum, sifremiDegistir, hesaplar, hesapAc, hesapGuncelle, sifreYenile,
     kullaniciAdi, Esitleyici, ogrenciAdi: async kid => { try { const k = await FB.getDoc(D("kisiler", kid)); return k.exists() ? k.data().ad : "Öğrenci"; } catch (_) { return "Öğrenci"; } } };
 })();

@@ -61,7 +61,7 @@ var FB = (() => {
         for (const p of Object.keys(simdi)) if (onceki[p] !== simdi[p]) deg.push({ type: p in onceki ? "modified" : "added", doc: snap(p) });
         for (const p of Object.keys(onceki)) if (!(p in simdi)) deg.push({ type: "removed", doc: { id: p.split("/").pop(), data: () => null } });
         const ilk = !f.cagrildi; f.cagrildi = true; onceki = simdi;
-        if (deg.length || ilk) next({ docChanges: () => deg });
+        if (deg.length || ilk) next({ docChanges: () => deg, docs: Object.keys(simdi).map(snap), size: Object.keys(simdi).length });   // gerçek QuerySnapshot gibi
       };
       dinleyiciler.add(f); setTimeout(f, 0); return () => dinleyiciler.delete(f);
     },

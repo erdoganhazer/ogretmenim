@@ -124,7 +124,7 @@ function turOyna(ctx, sorular, goster, secenek = {}) {
       ctx.ilerleme(yapilan, toplam);
       ctx.alan.innerHTML = `<div class="oyun-soru"></div><div class="oyun-geri" hidden></div>`;
       const kap = ctx.alan.querySelector(".oyun-soru"), geri = ctx.alan.querySelector(".oyun-geri");
-      if (tekrar) kap.insertAdjacentHTML("beforebegin", `<div class="oyun-tekrar-not">🔁 Bu soruyu bir daha deneyelim</div>`);
+      if (tekrar && !secenek.sessizTekrar) kap.insertAdjacentHTML("beforebegin", `<div class="oyun-tekrar-not">🔁 Bu soruyu bir daha deneyelim</div>`);
       const bas = performance.now();
       let cevaplandi = false;
       goster(kap, s, (dogru, bilgi = {}) => {
@@ -134,7 +134,11 @@ function turOyna(ctx, sorular, goster, secenek = {}) {
         if (!bilgi.kayitli) ctx.kaydet({ beceri: s.beceri, beceri_adi: s.beceri_adi, konu: s.konu, etkinlik: s.etkinlik, soru: s.anahtar, cevap: bilgi.cevap,
           dogru, sure: (performance.now() - bas) / 1000, bicim: bilgi.bicim || s.bicim, yazi: bilgi.yazi, eksik: bilgi.eksikNokta, kelime: s.kelime });
         if (!tekrar && dogru) ilkDogru++;
-        if (!dogru && !tekrar && secenek.tekrarYok !== true) { kuyruk.push({ s, tekrar: true }); toplam++; }
+        if (!dogru && !tekrar && secenek.tekrarYok !== true) {
+          // sessiz tekrar: hemen sona değil, birkaç soru sonrasına karışık yerleşir (öğrenci "tekrar" olduğunu fark etmez)
+          const yer = secenek.sessizTekrar ? Math.min(kuyruk.length, 2 + Math.floor(Math.random() * 3)) : kuyruk.length;
+          kuyruk.splice(yer, 0, { s, tekrar: true }); toplam++;
+        }
         ctx.ilerleme(yapilan, toplam);
         geri.hidden = false;
         if (dogru) {
