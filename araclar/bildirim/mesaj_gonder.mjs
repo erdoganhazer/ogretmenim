@@ -26,8 +26,12 @@ async function ogrencininVelileri(oid) {
 /* Deneme bildirimi: Actions › Mesaj bildirimleri › Run workflow › "deneme" alanına kullanıcı adı (ör. hazer). Kuyruğa dokunmaz. */
 const DENEME = (process.env.DENEME || "").trim().toLowerCase();
 if (DENEME) {
-  const k = (await db.collection("kisiler").where("kullanici_adi", "==", DENEME).limit(1).get()).docs[0];
-  if (!k) { console.log(`deneme: "${DENEME}" adlı kullanıcı yok`); process.exit(1); }
+  // kullanıcı adıyla ya da adın bir parçasıyla bulunur (ör. "hazer" → "Hazer Erdoğan")
+  const sade = x => String(x || "").toLocaleLowerCase("tr").replace(/[çğıöşü]/g, h => ({ ç: "c", ğ: "g", ı: "i", ö: "o", ş: "s", ü: "u" })[h]);
+  const herkes = (await db.collection("kisiler").get()).docs;
+  const k = herkes.find(d => sade(d.data().kullanici_adi) === sade(DENEME)) || herkes.find(d => sade(d.data().ad).split(/\s+/).includes(sade(DENEME)))
+    || herkes.find(d => sade(d.data().ad).includes(sade(DENEME)));
+  if (!k) { console.log(`deneme: "${DENEME}" bulunamadı. Kullanıcı adları: ${herkes.map(d => d.data().kullanici_adi + " (" + d.data().ad + ")").join(", ")}`); process.exit(1); }
   const cihazlar = (await k.ref.collection("cihazlar").where("aktif", "==", true).get()).docs;
   console.log(`deneme: ${k.data().ad} · ${cihazlar.length} açık cihaz`);
   const veri = { baslik: "🔔 ÖğretmeniM", metin: "Deneme bildirimi: bu cihaza bildirimler geliyor 👍", ac: "", etiket: "deneme-" + Date.now() };
