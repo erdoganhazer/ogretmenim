@@ -90,3 +90,9 @@
 - Kelime listeleri paneli telefonda taşıyordu (240 px sütun): tek sütun, defterler yatay kayar.
 - Sahte Firebase'in koleksiyon dinlemesi gerçek QuerySnapshot gibi `docs` da veriyor.
 - Kural testleri yerelde de çalışıyor (Java 21 + emülatör): 19/19. Başarımlar ertelendi (BASARIMLAR_PLANI.md'ye kararlar not edildi).
+
+## 12.11.2026 — Telefonun geri tuşu
+- Eskiden geri tuşu uygulamadan çıkıyordu (sayfa geçişleri tarayıcı geçmişine yazılmıyordu). `js/gezinti.js`: her sayfa geçişi ve açılan her pencere
+  geçmişe yazılır (adres değişmez). Geri: açık menü kapanır → oyun/sınav penceresinde bir üst ekran → açık pencere kapanır → önceki sayfa.
+  Ana sayfada ilk geri "Çıkmak için bir daha geri'ye bas" der; 2 saniye içinde ikincisi çıkar. Pencere ✕/Esc ile kapanınca kaydı geri alınır.
+- Denendi (telefon boyutu): Özet → Dersler → ders sayfası → mesaj penceresi, ✕ ile kapanan pencere, oyunda ünite/etkinlik ekranları, çıkış uyarısı.

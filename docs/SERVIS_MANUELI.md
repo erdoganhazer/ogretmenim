@@ -55,6 +55,9 @@
 - Güncelleme kendiliğinden: her yayında `sw.js`'ye sürüm yazılır (`araclar/sw_damgala.py`), uygulama yeni sürümü indirip yenilenir
   (açık bir pencere varsa uygulamadan çıkınca). Eski sürümde takılı kalırsa: uygulamayı kapatıp yeniden aç.
 
+## Geri tuşu
+- Telefonun geri tuşu uygulama içinde geri götürür (pencere → oyunda üst ekran → önceki sayfa). Ana sayfada iki kez basınca uygulamadan çıkar (`js/gezinti.js`).
+
 ## Sorun giderme
 - Actions'ta `yayinla` "FIREBASE_SERVICE_ACCOUNT sırrı tanımlı değil" diyorsa sır eklenmemiş; "PERMISSION_DENIED" diyorsa hizmet hesabının rolü eksik.
 - "Bu işlem için yetkin yok": kurallar yayınlanmamış ya da hesap öğrenciye atanmamış.
