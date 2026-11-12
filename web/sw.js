@@ -53,7 +53,7 @@ self.addEventListener("push", olay => {
   try { const j = olay.data ? olay.data.json() : {}; d = j.data || j; } catch (_) { d = { baslik: "ÖğretmeniM", metin: olay.data ? olay.data.text() : "" }; }
   const kok = self.registration.scope;
   olay.waitUntil(self.registration.showNotification(d.baslik || "ÖğretmeniM", {
-    body: d.metin || "", icon: kok + "img/uygulama-192.png", badge: kok + "img/uygulama-192.png", tag: d.etiket || "ogretmenim",
+    body: d.metin || "", icon: kok + "img/uygulama-192.png", badge: kok + "img/bildirim-rozet.png", tag: d.etiket || "ogretmenim",
     renotify: true, data: { ogrenci: d.ogrenci || "", anahtarlar: d.anahtarlar || "", ac: d.ac || "" },
     actions: d.anahtarlar ? [{ action: "haberim", title: "✓ Haberim var" }, { action: "ac", title: "Aç" }] : [],
   }));
