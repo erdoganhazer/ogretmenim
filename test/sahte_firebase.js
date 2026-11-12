@@ -6,16 +6,21 @@ var FB = (() => {
   const dinleyiciler = new Set();
   const kopya = o => JSON.parse(JSON.stringify(o));
   let n = 0; const uid = () => "u" + Date.now().toString(36) + (++n);
-  function uygula(v, eski) {
+  function uygula(v, eski, derin) {
     const out = eski ? kopya(eski) : {};
-    for (const [k, x] of Object.entries(v)) out[k] = x && x.__au ? [...(out[k] || []), ...x.__au.filter(y => !(out[k] || []).some(z => JSON.stringify(z) === JSON.stringify(y)))] : kopya(x);
+    for (const [k, x] of Object.entries(v)) {
+      if (x && x.__au) { const l = Array.isArray(out[k]) ? out[k] : []; out[k] = [...l, ...x.__au.filter(y => !l.some(z => JSON.stringify(z) === JSON.stringify(y)))]; }
+      else if (derin && x && typeof x === "object" && !Array.isArray(x) && out[k] && typeof out[k] === "object" && !Array.isArray(out[k])) out[k] = uygula(x, out[k], true);
+      else if (x && typeof x === "object" && !Array.isArray(x) && Object.values(x).some(y => y && y.__au)) out[k] = uygula(x, null, true);
+      else out[k] = kopya(x);
+    }
     return out;
   }
   function bildir() { yaz(); for (const d of dinleyiciler) d(); }
   const yazIslem = (ref, data, mod) => {
     if (mod === "sil") delete D.belgeler[ref.path];
     else if (mod === "guncelle") { if (!D.belgeler[ref.path]) throw Object.assign(new Error("yok"), { code: "not-found" }); D.belgeler[ref.path] = uygula(data, D.belgeler[ref.path]); }
-    else D.belgeler[ref.path] = uygula(data, mod === "birlestir" ? D.belgeler[ref.path] : null);
+    else D.belgeler[ref.path] = uygula(data, mod === "birlestir" ? D.belgeler[ref.path] : null, mod === "birlestir");
   };
   const snap = path => ({ id: path.split("/").pop(), exists: () => path in D.belgeler, data: () => kopya(D.belgeler[path]) });
   const auths = [];
@@ -60,6 +65,7 @@ var FB = (() => {
       };
       dinleyiciler.add(f); setTimeout(f, 0); return () => dinleyiciler.delete(f);
     },
+    messagingDestekli: async () => true, getMessaging: () => ({}), getToken: async () => "sahte-token-" + navigator.userAgent.length, deleteToken: async () => true,
     query: x => x, where: () => null, documentId: () => null, serverTimestamp: () => new Date().toISOString(),
   };
 })();

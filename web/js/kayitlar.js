@@ -63,7 +63,6 @@ function kayitKarti(k, secenek = {}) {
     const biten = k.kaynaklar.filter((_, i) => { const b = bl.filter(x => x.k === i).map(x => bl.indexOf(x)); return b.length && b.every(j => j < il); }).length;
     etiket.push(`<span class="kayit-kaynak${biten ? " yarim" : ""}" title="Biten kaynak / toplam kaynak">📚 ${biten}/${k.kaynaklar.length}</span>`);
   }
-  if ((k.ekler || []).length) etiket.push(`<span class="kayit-ek" title="Ekli dosya">📎${k.ekler.length}</span>`);
   if (tur !== "sinav" && notVar(k)) etiket.push(notIsareti(k));         // 0.19.1: açıklama girilmişse görünsün
   return `<div class="kayit t-${tur}${bitti ? " bitti" : ""}" data-koleksiyon="${KAYIT_TURLERI[tur].koleksiyon}" data-id="${esc(k.id)}"
       style="--renk:${esc(ders ? ders.renk : "var(--cizgi)")}">
@@ -121,7 +120,7 @@ function cizelgeyiCiz() {
     html += `<div class="gun-grup geciken"><div class="gun-baslik"><span>Geciken ödevler</span><span>${geciken.length}</span></div>
       ${geciken.map(o => kayitKarti(o, { tarih: "Teslim: " + tarihYaz(o.teslim) })).join("")}</div>`;
   }
-  if (sonucBekleyen.length) {
+  if (sonucBekleyen.length && veliAktif()) {          // not girişi velinin işi; öğrenci not görmez
     html += `<div class="gun-grup sonuc-bekleyen"><div class="gun-baslik"><span>Sonucu girilecek sınavlar</span><span>${sonucBekleyen.length}</span></div>
       ${sonucBekleyen.map(k => kayitKarti(k)).join("")}</div>`;
   }
@@ -270,13 +269,8 @@ function formuCiz() {
     html += alan("Açıklama / yer", `<textarea name="aciklama" rows="2" maxlength="1000">${esc(k.aciklama || "")}</textarea>`, true);
   }
 
-  html += `<div class="genis ek-alani"><span class="ek-baslik">Ekler <small>(PDF ya da fotoğraf)</small></span>
-    <div class="ek-listesi" id="ek-listesi"></div>
-    <label class="dugme kucuk ek-ekle">📎 Dosya ekle<input type="file" id="ek-sec" multiple accept=".pdf,application/pdf,image/*" hidden></label></div>`;
   const form = $("#kayit-form");
   $("#kayit-alanlar").innerHTML = html;
-  ekListesiCiz();
-  $("#ek-sec").addEventListener("change", ekleriYukle);
   $$(".saat-gir", form).forEach(kutu => saatKutusuKur(kutu));
   if (acikTur === "sinav") sinavSaatleriniKur(k);
   if (acikTur === "odev") kaynakAlaniKur(form);

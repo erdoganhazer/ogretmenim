@@ -3,3 +3,4 @@ export { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, creat
   setPersistence, browserLocalPersistence, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 export { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, collection, getDoc, getDocs, setDoc, updateDoc,
   deleteDoc, writeBatch, onSnapshot, query, where, arrayUnion, serverTimestamp, documentId } from "firebase/firestore";
+export { getMessaging, getToken, deleteToken, isSupported as messagingDestekli } from "firebase/messaging";

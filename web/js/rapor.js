@@ -13,7 +13,7 @@ function raporHtml(r, e) {
   const aliskanlik = r.bolumler.filter(b => b.baslik !== "Konu durumu"), konu = r.bolumler.filter(b => b.baslik === "Konu durumu");
   const s = r.sayilar, dk = s.calisma_dk;
   if (!r.bolumler.length) return `<div class="rp-ozet">${r.ozet.map(x => `<p>${e(x)}</p>`).join("")}</div>
-    <div class="rp-bos">Bu dönemde yorum yapacak kadar kayıt yok. Arın Çalışma Masam'ı, mini oyunları ve Cevap Kontrol'ü kullandıkça rapor dolacak.</div>`;
+    <div class="rp-bos">Bu dönemde yorum yapacak kadar kayıt yok. Öğrenci Çalışma Masam'ı, mini oyunları ve Cevap Kontrol'ü kullandıkça rapor dolacak.</div>`;
   return `<div class="rp-ozet">${r.ozet.map(x => `<p>${e(x)}</p>`).join("")}
       <div class="rp-cipler"><span class="rp-cip"><b>${s.biten}/${s.odev}</b> ödev bitti</span>
         <span class="rp-cip"><b>${Math.floor(dk / 60)} sa ${dk % 60} dk</b> kayıtlı çalışma</span>
@@ -22,7 +22,7 @@ function raporHtml(r, e) {
     </div>
     ${aliskanlik.length ? `<h2 class="rp-h2">Ödev alışkanlıkları <small>— nasıl, ne zaman, nerede çalışıyor</small></h2><div class="rp-izgara">${aliskanlik.map(bolum).join("")}</div>` : ""}
     ${konu.length ? `<h2 class="rp-h2">Konu durumu <small>— mini oyunlar, Cevap Kontrol ve sınav sonuçları</small></h2><div class="rp-izgara">${konu.map(bolum).join("")}</div>` : ""}
-    <p class="rp-not">${r.yetersiz.length ? `Henüz yeterli kayıt olmadığı için yorumlanmayan dersler: ${e(r.yetersiz.join(", "))}. ` : ""}Rapor yalnızca toplanan kayıtlara dayanır; her yorumun altında neye dayandığı yazar. Arın bu raporu görmez.</p>`;
+    <p class="rp-not">${r.yetersiz.length ? `Henüz yeterli kayıt olmadığı için yorumlanmayan dersler: ${e(r.yetersiz.join(", "))}. ` : ""}Rapor yalnızca toplanan kayıtlara dayanır; her yorumun altında neye dayandığı yazar. Öğrenci bu raporu görmez.</p>`;
 }
 function raporUstHtml(r, secili) {
   const d = [["hafta", "Bu hafta"], ["ay", "Son 4 hafta"], ["donem", "Bu dönem"]];
@@ -40,7 +40,9 @@ async function raporCiz() {
   kap.innerHTML = `<div class="rp-bos">Rapor hazırlanıyor…</div>`;
   try {
     const r = await api("GET", "rapor?donem=" + raporDonem);
-    kap.innerHTML = raporUstHtml(r, raporDonem) + raporHtml(r, esc);
+    // Veri yokken "%0'ında çalıştı" gibi anlamsız cümleler kurulmasın
+    const az = !r.sayilar.calisma_dk && r.sayilar.biten === 0 && !(r.bolumler || []).some(b => b.baslik === "Konu durumu");
+    kap.innerHTML = raporUstHtml(r, raporDonem) + (az ? `<div class="rp-bos">Bu dönem için henüz yeterli kayıt yok. Öğrenci Çalışma Masam'da işleri işaretledikçe ve oyun oynadıkça rapor dolacak.</div>` : raporHtml(r, esc));
   } catch (h) { kap.innerHTML = `<div class="rp-bos">${esc(h.message)}</div>`; }
 }
 function raporOlaylariniKur() {

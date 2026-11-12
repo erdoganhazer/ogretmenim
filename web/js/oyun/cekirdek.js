@@ -66,7 +66,7 @@ function oyunCevapKaydet(o, k, ctx) {
   if (k.yazi) kayit.yazi = String(k.yazi).slice(0, 600);
   if (k.kelime) kayit.kelime = k.kelime;                 // 0.25: Kelime Defterim (kelime başına istatistik)
   if (k.eksik != null) { kayit.eksik = String(k.eksik).slice(0, 40); kayit.bicim = "acik"; }
-  fetch("/api/alistirma", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(kayit) }).catch(() => {});
+  api("POST", "alistirma", kayit).catch(() => {});       // web: tarayıcıdaki motora (eskiden /api/alistirma)
 }
 
 function oyunKapat() {

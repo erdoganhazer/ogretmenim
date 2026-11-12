@@ -1,0 +1,13 @@
+{
+ "surum": 1,
+ "paketler": [
+  {
+   "id": "yazili-5-2026-d1-y1",
+   "tur": "yazili",
+   "sinif": 5,
+   "ad": "5. sınıf · 2026–27 1. dönem 1. yazılılar",
+   "aciklama": "Arın'ın okulunun yazılı kapsamı: Fen, Matematik, Sosyal, Türkçe, İngilizce, Din, Almanca",
+   "dosya": "hazirlik/yazili1.json"
+  }
+ ]
+}

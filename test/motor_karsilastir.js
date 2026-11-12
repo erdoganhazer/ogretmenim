@@ -3,7 +3,7 @@ global.Planlayici = require("../web/js/motor/planlayici.js");
 global.Rapor = require("../web/js/motor/rapor.js");
 global.TOHUM = require("../web/js/motor/tohum_veri.js");
 const fs = require("fs"), { Motor } = require("../web/js/motor/cekirdek.js");
-const yazili = JSON.parse(fs.readFileSync("/home/claude/ogretmenim/web/hazirlik/yazili1.json", "utf8"));
+const yazili = JSON.parse(fs.readFileSync(__dirname + "/../web/hazirlik/yazili1.json", "utf8"));
 const kanon = x => Array.isArray(x) ? "[" + x.map(kanon).join(",") + "]" : x && typeof x === "object" ? "{" + Object.keys(x).sort((a, b) => Rapor.pyStrCmp(a, b)).map(k => JSON.stringify(k) + ":" + kanon(x[k])).join(",") + "}" : JSON.stringify(x);
 function* satirOku(yol) {
   const fd = fs.openSync(yol, "r"), tampon = Buffer.alloc(1 << 24); let artik = "";
@@ -22,11 +22,11 @@ function fark(a, b, yol, f) {
 }
 let m, sayac, saat, hataSay = 0, adimSay = 0, sn = -1;
 const ortam = { tz: 180, yazili, simdi: () => new Date(Date.parse(saat)), kimlik: () => (++sayac.n).toString(16).padStart(32, "0") };
-const durumAl = () => { const v = JSON.parse(JSON.stringify(m.veri)); delete v.guvenlik; delete v.esitleme;
+const durumAl = () => { const v = JSON.parse(JSON.stringify(m.veri)); delete v.guvenlik; delete v.esitleme; delete v.icerik; delete v.koleksiyonlar.ders_notlari;
   const kel = v.koleksiyonlar.kelimeler; v.koleksiyonlar.kelimeler = { sayi: kel.length, ozet: require("crypto").createHash("sha1").update(kanon(kel)).digest("hex") }; return v; };
 for (const s of satirlar) {
   saat = s.saat;
-  if (s.yeni) { sn++; sayac = { n: 0 }; m = new Motor(JSON.parse(JSON.stringify(s.veri)), ortam); m.tohumla(); }
+  if (s.yeni) { sn++; sayac = { n: 0 }; m = new Motor(Object.assign(JSON.parse(JSON.stringify(s.veri)), { icerik: { paketler: [yazili.paket] } }), ortam); m.tohumla(); }
   let js = null;
   if (!s.yeni) {
     js = m.api(s.yontem, s.yol, s.govde === null ? undefined : JSON.parse(JSON.stringify(s.govde)), { veli: s.veli, ad: "Hazer", veliKayit: { id: "f".repeat(32), ad: "Hazer" } });
@@ -36,6 +36,7 @@ for (const s of satirlar) {
   if (js) {
     if (js.durum !== s.durum_kodu) f.push(`durum ${s.durum_kodu} ≠ ${js.durum}`);
     if (s.yol.startsWith("rapor") && s.cevap) { delete s.cevap.olusturma; delete js.govde.olusturma; }
+    if (s.yol === "veri" && js.govde) { delete js.govde.icerik; if (js.govde.koleksiyonlar) delete js.govde.koleksiyonlar.ders_notlari; }   // web'e özgü alanlar
     const pyMesaj = s.cevap && s.cevap.hata;
     if (!(pyMesaj && PY_HATA.test(pyMesaj))) fark(s.cevap, js.govde, "cevap", f);
   }
@@ -44,7 +45,7 @@ for (const s of satirlar) {
   if (f.length) {
     hataSay++;
     if (hataSay <= 5) console.log(`senaryo ${sn} ${s.yeni ? "TOHUM" : s.yontem + " " + s.yol} ${JSON.stringify(s.govde)?.slice(0, 200)} veli=${s.veli}\n   ` + f.join("\n   "));
-    const kel = m.veri.koleksiyonlar.kelimeler; m.veri = JSON.parse(JSON.stringify(s.durum)); m.veri.koleksiyonlar.kelimeler = kel;        // sonraki adımlar bağımsız sınansın
+    const kel = m.veri.koleksiyonlar.kelimeler; m.veri = JSON.parse(JSON.stringify(s.durum)); m.veri.koleksiyonlar.kelimeler = kel; m.veri.icerik = { paketler: [yazili.paket] }; m.veri.koleksiyonlar.ders_notlari = [];        // sonraki adımlar bağımsız sınansın
   }
 }
 console.log(`adım ${adimSay}, farklı ${hataSay}`);

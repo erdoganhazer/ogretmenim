@@ -77,7 +77,8 @@ const Bulut = (() => {
       const kid = yeniId(), b = FB.writeBatch(db);
       b.set(D("sistem", "kurulum"), { yonetici_uid: c.user.uid, yonetici_kisi: kid, zaman: new Date().toISOString() });
       b.set(D("uidler", c.user.uid), { kisi: kid });
-      b.set(D("kisiler", kid), { ad: ad.trim() || kullanici, kullanici_adi: kullanici, rol: "yonetici", aktif: true, ogrenciler: [], uid: c.user.uid, eposta: posta });
+      b.set(D("kisiler", kid), { ad: ad.trim() || kullanici, kullanici_adi: kullanici, rol: "yonetici", aktif: true, ogrenciler: [], uid: c.user.uid, eposta: posta,
+        aile: "aile-" + kid.slice(0, 8) });                                  // ileride aile/okul ayrımı için
       await b.commit();
       await FB.setDoc(D("girisler", kullanici), { eposta: posta });
       return await kimim();
@@ -114,11 +115,12 @@ const Bulut = (() => {
     try {
       if ((await FB.getDoc(D("girisler", kullanici))).exists()) throw new Error("Bu kullanıcı adı alınmış");
       const posta = eposta(kullanici), uid = await hesapOlustur(posta, sifre), kid = yeniId(), b = FB.writeBatch(db);
-      b.set(D("kisiler", kid), { ad: ad.trim() || kullanici, kullanici_adi: kullanici, rol, aktif: true, ogrenciler: rol === "ogrenci" ? [] : ogrenciler, uid, eposta: posta });
+      b.set(D("kisiler", kid), { ad: ad.trim() || kullanici, kullanici_adi: kullanici, rol, aktif: true, ogrenciler: rol === "ogrenci" ? [] : ogrenciler, uid, eposta: posta,
+        aile: ben.aile || "aile-" + ben.id.slice(0, 8) });
       b.set(D("uidler", uid), { kisi: kid });
       b.set(D("girisler", kullanici), { eposta: posta });
       if (rol === "ogrenci") {
-        b.set(D("ogrenciler", kid), ogrenciBelgesi(ad));
+        b.set(D("ogrenciler", kid), Object.assign(ogrenciBelgesi(ad), { aile: ben.aile || "aile-" + ben.id.slice(0, 8) }));
         b.update(D("kisiler", ben.id), { ogrenciler: FB.arrayUnion(kid) });
       }
       await b.commit();
@@ -151,6 +153,45 @@ const Bulut = (() => {
     } catch (e) { throw new Error(hataMetni(e)); }
   }
 
+
+  /* ---------- veli: "haberim var", içerik paketleri, bildirim cihazları ---------- */
+  const bugunStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+  async function bilinenler(oid) {
+    const s = await FB.getDoc(D("ogrenciler", oid, "veli", "bilinen"));
+    return s.exists() ? ((s.data().gunler || {})[bugunStr()] || []) : [];
+  }
+  async function haberimVar(oid, anahtar) {
+    try { await FB.setDoc(D("ogrenciler", oid, "veli", "bilinen"), { gunler: { [bugunStr()]: FB.arrayUnion(anahtar) } }, { merge: true }); }
+    catch (e) { throw new Error(hataMetni(e)); }
+  }
+  async function icerikGetir(oid) {
+    const s = await FB.getDoc(D("ogrenciler", oid));
+    return s.exists() ? ((s.data().icerik || {}).paketler || []) : [];
+  }
+  async function icerikAta(oid, paketler) {
+    try { await FB.setDoc(D("ogrenciler", oid), { icerik: { paketler } }, { merge: true }); } catch (e) { throw new Error(hataMetni(e)); }
+  }
+  /* Bildirim: her veli kendi cihazlarını ve tercihlerini kendi kaydının altında tutar (kisiler/{ben}/...) */
+  async function bildirimAyarOku(kid) {
+    const s = await FB.getDoc(D("kisiler", kid, "ayar", "bildirim"));
+    return s.exists() ? s.data() : null;
+  }
+  async function bildirimAyarYaz(kid, ayar) {
+    try { await FB.setDoc(D("kisiler", kid, "ayar", "bildirim"), ayar, { merge: true }); } catch (e) { throw new Error(hataMetni(e)); }
+  }
+  async function cihazlar(kid) {
+    const s = await FB.getDocs(C("kisiler", kid, "cihazlar"));
+    return s.docs.map(d => Object.assign({ id: d.id }, d.data()));
+  }
+  async function cihazYaz(kid, cid, veri) {
+    try { await FB.setDoc(D("kisiler", kid, "cihazlar", cid), veri, { merge: true }); } catch (e) { throw new Error(hataMetni(e)); }
+  }
+  async function bildirimTokeni(vapid) {
+    if (!FB.messagingDestekli || !(await FB.messagingDestekli())) throw new Error("Bu tarayıcı bildirim desteklemiyor");
+    const kayit = await navigator.serviceWorker.ready;
+    return FB.getToken(FB.getMessaging(app), { vapidKey: vapid, serviceWorkerRegistration: kayit });
+  }
+
   /* ---------- öğrenci verisinin eşitlenmesi ----------
      Motor tek veri nesnesiyle çalışır; her istekten sonra değişen belgeler toplu yazılır, başka cihazdan gelen değişiklikler
      anında veriye işlenir. Firestore'un yerel önbelleği sayesinde internetsiz de çalışır, bağlantı gelince gönderir. */
@@ -170,7 +211,7 @@ const Bulut = (() => {
       }));
       dinle(this.yol(""), s => { if (s.exists()) this.harita.set("", s.data()); });
       dinle(this.yol("plan/ayarlar"), s => { if (s.exists()) this.harita.set("plan/ayarlar", s.data()); else this.harita.delete("plan/ayarlar"); });
-      for (const kol of [...Parcala.KAYIT_KOLLARI, "plan_gun"]) dinle(C("ogrenciler", this.oid, kol), s => {
+      for (const kol of [...Parcala.KAYIT_KOLLARI, "plan_gun", ...(veli ? [Parcala.NOT_KOL] : [])]) dinle(C("ogrenciler", this.oid, kol), s => {
         for (const d of s.docChanges()) { const p = `${kol}/${d.doc.id}`; if (d.type === "removed") this.harita.delete(p); else this.harita.set(p, d.doc.data()); }
       });
       for (const a of veli ? ["alistirmalar", "gunluk"] : ["alistirmalar"]) dinle(C("ogrenciler", this.oid, a), s => {
@@ -201,7 +242,7 @@ const Bulut = (() => {
     /* Değişen belgeleri yaz. Öğrenci oturumunda yazma izni olmayan belgeler hiç gönderilmez. */
     kaydet() {
       const veli = this.oturum.veli, yeni = Parcala.belgeler(this.motor.veri), yazilacak = [];
-      const ogrenciYazar = p => !(p === "" || p === "plan/ayarlar" || /^(kelime_defterleri|kelimeler|baglantilar)\//.test(p));
+      const ogrenciYazar = p => !(p === "" || p === "plan/ayarlar" || /^(kelime_defterleri|kelimeler|baglantilar|sinav_notlari)\//.test(p));
       for (const [p, d] of yeni) {
         const j = JSON.stringify(d);
         if (this.sonBelge.get(p) !== j && (veli || ogrenciYazar(p))) yazilacak.push(["set", p, JSON.parse(j)]);
@@ -209,7 +250,7 @@ const Bulut = (() => {
       }
       for (const p of [...this.sonBelge.keys()]) if (!yeni.has(p)) { if (p.startsWith("plan_gun/")) yazilacak.push(["sil", p]); this.sonBelge.delete(p); }
       for (const a of Parcala.EKLEMELI) {
-        const liste = this.motor.veri[a], yeniler = liste.slice(this.sayac[a]);
+        const liste = this.motor.veri[a], yeniler = liste.filter(k => !k._k);     // sunucuya gitmiş her kayıtta _k var
         this.sayac[a] = liste.length;
         if (a === "gunluk" && !veli) this.yerelGunluk.push(...yeniler);
         for (const [gun, l] of Parcala.gunlere(yeniler)) {
@@ -220,7 +261,7 @@ const Bulut = (() => {
       for (let i = 0; i < yazilacak.length; i += 400) {
         const b = FB.writeBatch(db);
         for (const [tur, p, d] of yazilacak.slice(i, i + 400)) {
-          if (tur === "set") b.set(this.yol(p), d);
+          if (tur === "set") p === "" ? b.set(this.yol(p), d, { merge: true }) : b.set(this.yol(p), d);   // ana belgede yöneticinin alanları (icerik) korunur
           else if (tur === "sil") b.delete(this.yol(p));
           else b.set(this.yol(p), { kayitlar: FB.arrayUnion(...d) }, { merge: true });
         }
@@ -233,6 +274,7 @@ const Bulut = (() => {
     kapat() { this.kapatlar.forEach(f => f()); this.kapatlar = []; }
   }
 
-  return { baslat, oturumuBekle, kimim, girisYap, cikisYap, kurulumVarMi, ilkKurulum, sifremiDegistir, hesaplar, hesapAc, hesapGuncelle, sifreYenile,
+  return { bilinenler, haberimVar, icerikGetir, icerikAta, bildirimAyarOku, bildirimAyarYaz, cihazlar, cihazYaz, bildirimTokeni, bugunStr,
+    baslat, oturumuBekle, kimim, girisYap, cikisYap, kurulumVarMi, ilkKurulum, sifremiDegistir, hesaplar, hesapAc, hesapGuncelle, sifreYenile,
     kullaniciAdi, Esitleyici, ogrenciAdi: async kid => { try { const k = await FB.getDoc(D("kisiler", kid)); return k.exists() ? k.data().ad : "Öğrenci"; } catch (_) { return "Öğrenci"; } } };
 })();

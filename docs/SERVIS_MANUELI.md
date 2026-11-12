@@ -16,6 +16,22 @@
   ("serviceusage" yetki hatası verirse *Service Usage Consumer* da eklenir). JSON'un tamamı depo › Settings › Secrets and variables › Actions › New repository secret › ad: `FIREBASE_SERVICE_ACCOUNT`.
 - **Firebase Authentication › Settings › Authorized domains:** `erdoganhazer.github.io` ekli olmalı.
 
+## Öğrenci dosyası ve eski veriler
+- **Eski uygulamadan geçiş:** Arın'ın bilgisayarında eski uygulamanın Ayarlar › Yedekleme › Şimdi yedek al ile .zip al (ya da `~/OgretmeniM-Yedekler`).
+  Web'de veli › Ayarlar › Öğrenci dosyası › İçe aktar › zip'i seç › raporu oku › "Önce yedeği indir, sonra aktar". Konu Defteri arşivini ayrıca indir.
+- **Yıllık yedek / başka hesaba taşıma:** Öğrenci dosyası › Dışa aktar (.json). Aynı dosya tekrar yüklenirse çoğalmaz.
+- **Sınıf atlama:** Ayarlar › Sınıf › Yeni sınıfa geç. Yanlış sınıfta kalan ders: "Dersleri sınıflar arasında taşı".
+
+## İçerik paketleri
+- Katalog `web/hazirlik/paketler.json`. Öğrenciye atama: Hesapları yönet › öğrenci › İçerik paketleri › Kaydet.
+- Yeni dönem yazılı içeriği: `araclar/hazirlik/*.py` → `araclar/hazirlik_derle.py` → yeni dosya + katalogda yeni `id`.
+
+## Bildirimler
+- Her veli kendi cihazında: Ayarlar › Bildirimler › Bu cihaza bildirim gönder; saat ve uyarı türleri orada. iPhone'da önce Ana Ekrana Ekle.
+- Gönderim: Actions › "Veli bildirimleri" (yarım saatte bir). Elle denemek için Run workflow › kuru = 1 (göndermez, günlüğe yazar).
+- GitHub 60 gün değişiklik olmayan depoda zamanlanmış işi durdurur: Actions › Veli bildirimleri › Enable workflow.
+- Bildirim gelmiyorsa: cihaz "🔔" mi, saat geçti mi, "Haberim var" denmiş mi, Actions günlüğünde "gönderilemedi" var mı (geçersiz cihaz kendiliğinden kapanır).
+
 ## Uygulamayı yükleme
 - **Android (Chrome/Samsung):** siteyi aç › menü ya da giriş ekranındaki **📲 Uygulamayı yükle** › Yükle. Simge ana ekrana gelir.
 - **iPhone/iPad:** Safari › Paylaş › **Ana Ekrana Ekle** (uygulamadaki 📲 düğmesi adımları gösterir). Ana ekrandan ilk açışta bir kez giriş gerekir.

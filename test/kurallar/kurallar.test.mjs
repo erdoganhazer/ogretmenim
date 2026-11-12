@@ -84,6 +84,29 @@ test("Notlarım öğrencinindir: veli okur, yazamaz", async () => {
   await assertSucceeds(getDoc(doc(db("u_veli"), `${A}/ders_notlari/n1`)));
   await assertFails(updateDoc(doc(db("u_veli"), `${A}/ders_notlari/n1`), { metin: "düzelttim" }));
 });
+test("sınav notları yalnız velide; etkinlik belgesinde not tutulmaz", async () => {
+  await assertSucceeds(setDoc(doc(db("u_veli"), `${A}/sinav_notlari/e1`), { id: "e1", puan: 85 }));
+  await assertFails(getDoc(doc(db("u_arin"), `${A}/sinav_notlari/e1`)));
+  await assertFails(getDocs(collection(db("u_arin"), `${A}/sinav_notlari`)));
+  await assertFails(setDoc(doc(db("u_arin"), `${A}/sinav_notlari/e9`), { id: "e9", puan: 100 }));
+  await assertFails(setDoc(doc(db("u_veli"), `${A}/etkinlikler/e5`), { id: "e5", kaynak: "veli", tur: "sinav", puan: 70 }));
+  await assertSucceeds(setDoc(doc(db("u_veli"), `${A}/etkinlikler/e5`), { id: "e5", kaynak: "veli", tur: "sinav" }));
+});
+test("veli ortak notları ve bildirim cihazları", async () => {
+  await assertSucceeds(setDoc(doc(db("u_veli"), `${A}/veli/bilinen`), { gunler: { "2026-11-12": ["plan:2026-11-12"] } }));
+  await assertSucceeds(getDoc(doc(db("u_yon"), `${A}/veli/bilinen`)));
+  await assertFails(getDoc(doc(db("u_arin"), `${A}/veli/bilinen`)));
+  await assertSucceeds(setDoc(doc(db("u_veli"), `kisiler/${VELI}/cihazlar/c1`), { token: "t", aktif: true }));
+  await assertSucceeds(setDoc(doc(db("u_veli"), `kisiler/${VELI}/ayar/bildirim`), { saat: "20:00" }));
+  await assertFails(setDoc(doc(db("u_arin"), `kisiler/${VELI}/cihazlar/c2`), { token: "t" }));
+  await assertFails(setDoc(doc(db("u_veli"), `kisiler/${VELI}/baska/x`), { a: 1 }));
+  await assertFails(getDoc(doc(db("u_arin"), `kisiler/${VELI}/cihazlar/c1`)));
+  await assertSucceeds(getDoc(doc(db("u_yon"), `kisiler/${VELI}/cihazlar/c1`)));
+});
+test("yönetici öğrenciye içerik paketi atar", async () => {
+  await assertSucceeds(setDoc(doc(db("u_yon"), A), { icerik: { paketler: ["yazili-5-2026-d1-y1"] } }, { merge: true }));
+  await assertFails(setDoc(doc(db("u_arin"), A), { icerik: { paketler: [] } }, { merge: true }));
+});
 test("silme yok (silindi işareti kullanılır)", async () => {
   const { deleteDoc } = await import("firebase/firestore");
   await assertFails(deleteDoc(doc(db("u_veli"), `${A}/odevler/o1`)));

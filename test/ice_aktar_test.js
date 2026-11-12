@@ -1,0 +1,18 @@
+global.Planlayici = require("../web/js/motor/planlayici.js"); global.Rapor = require("../web/js/motor/rapor.js"); global.TOHUM = require("../web/js/motor/tohum_veri.js");
+const fs = require("fs"), assert = require("assert"), { Motor } = require("../web/js/motor/cekirdek.js");
+const eski = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+eski.alistirmalar = fs.existsSync(process.argv[3]) ? fs.readFileSync(process.argv[3], "utf8").trim().split("\n").filter(Boolean).map(JSON.parse) : [];
+const m = new Motor(null, { tz: 180 }); m.oturum = { veli: true, ad: "Hazer" }; m.tohumla();
+const say = () => Object.fromEntries(Object.entries(m.veri.koleksiyonlar).map(([k, v]) => [k, v.length]));
+const once = say();
+const kuru = m.iceAktar(eski, { kuru: true });
+assert.deepStrictEqual(say(), once, "kuru deneme veriyi değiştirmemeli");
+const r1 = m.iceAktar(eski);
+const s1 = say(), a1 = m.veri.alistirmalar.length, c1 = m.veri.plan.calisma.length;
+const r2 = m.iceAktar(eski);
+assert.deepStrictEqual(say(), s1, "ikinci yükleme çoğaltmamalı"); assert.strictEqual(m.veri.alistirmalar.length, a1); assert.strictEqual(m.veri.plan.calisma.length, c1);
+for (const k of Object.keys(r2.koleksiyonlar)) assert.strictEqual(r2.koleksiyonlar[k].eklenen, 0, k);
+const disa = m.disaAktar(); const m2 = new Motor(null, { tz: 180 }); m2.oturum = { veli: true }; m2.tohumla(); m2.iceAktar(JSON.parse(JSON.stringify(disa)));
+const r3 = m2.iceAktar(disa);
+for (const k of Object.keys(r3.koleksiyonlar)) assert.strictEqual(r3.koleksiyonlar[k].eklenen, 0, "dışa→içe " + k);
+console.log("önce", once, "\nsonra", s1, "\nrapor", JSON.stringify(r1.koleksiyonlar), r1.plan, r1.alistirmalar, r1.arsiv, r1.uyarilar);

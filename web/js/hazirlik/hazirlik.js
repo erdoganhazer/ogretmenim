@@ -10,10 +10,12 @@ const HZ_RENK = { fen: "#10B981", sosyal: "#EF4444", turkce: "#F59E0B", din: "#0
 
 async function hazirlikYukle() {
   try {
-    const r = await fetch("/hazirlik/yazili1.json");
+    // İçerik paketi: yazılı hazırlık yalnız bu paketin atandığı öğrencide görünür (Hesaplar › öğrenci › içerik)
+    const r = await fetch("hazirlik/yazili1.json");
     if (!r.ok) return;
     const veri = await r.json();
-    hz.yazililar = veri.yazililar || [];
+    const atanan = ((durum.veri && durum.veri.icerik) || {}).paketler || [];
+    hz.yazililar = atanan.includes(veri.paket) ? (veri.yazililar || []) : [];
   } catch (_) { return; }
   for (const y of hz.yazililar) {
     const kod = "y1-" + y.ders;

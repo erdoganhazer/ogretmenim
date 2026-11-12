@@ -121,8 +121,19 @@ function derslerSayfasiCiz() {
 
   // Önce notu/sınavı olan dersler, sonra diğerleri (ders sırasıyla)
   const dersler = sinifDersleri(sinif).slice().sort((a, b) => (sonucMap.has(b.id) - sonucMap.has(a.id)) || ((a.sira ?? 0) - (b.sira ?? 0)));
+  const veli = veliAktif();
   kap.innerHTML = dersler.map(d => {
     const k = sonucMap.get(d.id);
+    if (!veli) {                                          // öğrenci: not ve ortalama yok; ders sayfasına götüren kart
+      const sonrakiO = k && k.sinavlar.find(s => s.tarih >= bugun);
+      const sayi = (durum.veri.koleksiyonlar.ders_notlari || []).filter(n => !n.silindi && n.ders_id === d.id).length;
+      const saatO = Object.values(hucreler).filter(v => v === d.id).length;
+      return `<button type="button" class="panel sonuc-kart ders-kart-ogr" data-ders-ac="${d.id}" style="--renk:${esc(d.renk)}">
+        <span class="sonuc-baslik"><span class="sonuc-ders">${esc(d.ad)}</span><span class="ders-ok">›</span></span>
+        <span class="sonuc-bilgi">${saatO ? `Haftada ${saatO} saat` : "Programda yok"}${sayi ? ` · ${sayi} notum` : ""}</span>
+        ${sonrakiO ? `<span class="sonraki-sinav">📅 Sıradaki sınav: ${strTarih(sonrakiO.tarih).getDate()} ${AYLAR[strTarih(sonrakiO.tarih).getMonth()]} ${GUNLER[strTarih(sonrakiO.tarih).getDay()]}</span>` : ""}
+      </button>`;
+    }
     const saat = Object.values(hucreler).filter(v => v === d.id).length;
     const sonraki = k && k.sinavlar.find(s => s.tarih >= bugun);
     let tablo = `<div class="gun-bos">Henüz sınav yok.</div>`;
@@ -138,7 +149,7 @@ function derslerSayfasiCiz() {
     }
     return `<div class="panel sonuc-kart" style="--renk:${esc(d.renk)}">
       <div class="sonuc-baslik">
-        <span class="sonuc-ders">${esc(d.ad)}</span>
+        <button type="button" class="sonuc-ders baglanti-gibi" data-ders-ac="${d.id}" title="Ders sayfası">${esc(d.ad)} ›</button>
         <span class="sonuc-ort ${k && k.ortalama !== null ? notSinifi(k.ortalama) : "bos-ort"}">${ortYaz(k ? k.ortalama : null)}</span>
       </div>
       <div class="sonuc-bilgi">${saat ? `Haftada ${saat} saat` : "Programda yok"}${k ? ` · ${k.yapilan} sınav yapıldı` : ""}
@@ -154,7 +165,9 @@ function sonucOlaylariniKur() {
   $("#ders-duzenle").addEventListener("click", dersDuzenlemeDegistir);
   $("#ders-sinif").addEventListener("change", e => { dersSinifi = Number(e.target.value); dersDuzenlemeKapat(); derslerSayfasiCiz(); });
   $("#ders-kartlari").addEventListener("click", e => {
-    const satir = e.target.closest(".sonuc-satir");
+    const ac = e.target.closest("[data-ders-ac]");
+    if (ac) return dersSayfasiAc(ac.dataset.dersAc);
+    const satir = veliAktif() && e.target.closest(".sonuc-satir");
     if (!satir) return;
     const k = kayitBul("etkinlikler", satir.dataset.id);
     if (k) pencereAc("sinav", k);

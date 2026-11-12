@@ -33,9 +33,11 @@ function bildir(mesaj, hata = false) {
 async function sayfaAc(ad) {
   if (ad !== "program") programDuzenlemeKapat();
   if (ad !== "dersler") dersDuzenlemeKapat();
-  const navAd = { cep: "defterler", program: "ana", dersler: "ana" }[ad] || ad;      // 0.28: sade menü
+  if (ad === "defterler") ad = "cep";                     // web: Konu Defteri kalktı
+  if (["ozet", "rapor"].includes(ad) && !veliAktif()) ad = "ana";
+  const navAd = { program: veliAktif() ? "dersler" : "ana", ders: "dersler" }[ad] || ad;
   $$("#sekmeler button").forEach(b => b.classList.toggle("aktif", b.dataset.sayfa === navAd));
-  document.body.classList.toggle("cizelgesiz", !["ana", "plan"].includes(ad));   // Zaman Çizelgesi yalnız Bugün'de
+  document.body.classList.toggle("cizelgesiz", !["ana", "plan", "ozet"].includes(ad));   // Zaman Çizelgesi Bugün'de ve veli özetinde
   if (ad === "ogren" && typeof ogrenCiz === "function") ogrenCiz();
   $$(".sayfa").forEach(s => s.classList.toggle("aktif", s.id === "sayfa-" + ad));
   $(".sayfalar").scrollTop = 0;
@@ -44,7 +46,9 @@ async function sayfaAc(ad) {
   if (ad === "cep") cepCiz();
   if (ad === "program") programSayfasiCiz();
   if (ad === "dersler") derslerSayfasiCiz();
-  if (ad === "defterler") defterSayfasiCiz();
+  if (ad === "ozet") veliOzetCiz();
+  if (ad === "ders") dersSayfasiCiz();
+  if (ad === "rapor") raporSayfasiCiz();
   if (ad === "plan") planYukle();
   document.body.classList.toggle("plan-acik", ad === "plan");   // 0.18: Planım'da sağdaki Zaman Çizelgesi gizlenir
 }
@@ -106,11 +110,11 @@ function herSeyiYenile() {
   sinavTakvimiCiz();
   araclariCiz();
   motivasyonCiz();
-  muzikCiz();
   mesajRozetiCiz();
   if (typeof hz !== "undefined" && hz.yuklendi) { yaziliTarihleriniEsle(); yaziliPanelCiz(); if (typeof provaListesiCiz === "function") provaListesiCiz(); }
   if (typeof anaSiradakiCiz === "function") anaSiradakiCiz();   // 0.25.1: yazılı tarihleri Zaman Çizelgesi'nden
-  if ($("#sayfa-defterler").classList.contains("aktif")) agacCiz();   // açık not düzenlemesini bozmamak için yalnız ağaç
+  if ($("#sayfa-ozet").classList.contains("aktif")) veliOzetCiz();
+  if ($("#sayfa-ders").classList.contains("aktif")) dersSayfasiCiz();
   if ($("#sayfa-dersler").classList.contains("aktif")) derslerSayfasiCiz();
   if ($("#sayfa-cep").classList.contains("aktif") && !cep.duzenlenen) cepCiz();
 }
@@ -149,8 +153,7 @@ async function profiliKaydet(e) {
   $$("input[name]", form).forEach(i => (yeni[i.name] = i.value.trim()));
   try {
     for (const [alan, dosya] of Object.entries(bekleyenFoto)) {
-      const sonuc = await api("POST", "foto", dosya);
-      yeni[alan] = sonuc.yol;
+      yeni[alan] = await resimKucult(dosya);            // web: küçültülüp profilde saklanır (≈20 KB)
     }
     durum.veri.profil = await api("PUT", "profil", yeni);
     Object.keys(bekleyenFoto).forEach(k => delete bekleyenFoto[k]);
@@ -176,12 +179,9 @@ async function basla() {
   sonucOlaylariniKur();
   veliOlaylariniKur();
   aracOlaylariniKur();
-  defterOlaylariniKur();
-  disariOlaylariniKur();
   cepOlaylariniKur();
   motivasyonOlaylariniKur();
   mesajOlaylariniKur();
-  muzikOlaylariniKur();
   miniOyunOlaylariniKur();
   gelisimOlaylariniKur();
   planOlaylariniKur();
@@ -206,11 +206,16 @@ async function basla() {
   await planYukle();
   calismaBildir();
   if (typeof zaman !== "undefined" && zaman) sayfaAc("plan");     // çalışırken kapanıp açıldıysa doğrudan Çalışma Masam
-  baglantiOlaylariniKur();
   raporOlaylariniKur();
   hazirlikOlaylariniKur();
   kelimeOlaylariniKur();
   ogrenOlaylariniKur();
+  kelimeYonetimOlaylariniKur();
+  dersSayfaOlaylariniKur();
+  veliOzetOlaylariniKur();
+  dosyaOlaylariniKur();
+  bildirimOlaylariniKur();
+  if (veliAktif()) sayfaAc("ozet");
 
   // Saat, selamlama, "Şimdi" dersi ve gün değişimi için düzenli yenile
   let sonGun = new Date().getDate();

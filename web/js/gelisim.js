@@ -25,7 +25,7 @@ function gelisimCubuk(oran) {
 function gelisimHtml(g, kacis) {
   const e = kacis;
   if (!g || !g.toplam) {
-    return `<div class="gl-bos">Henüz kayıt yok. Arın mini oyunları ya da Cevap Kontrol'ü kullandıkça burada hangi konularda
+    return `<div class="gl-bos">Henüz kayıt yok. Öğrenci mini oyunları ya da Cevap Kontrol'ü kullandıkça burada hangi konularda
       desteğe ihtiyacı olduğu, hangi konularda güçlü olduğu görünecek.</div>`;
   }
   const gunler = Object.entries(g.gunler || {});

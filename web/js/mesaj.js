@@ -47,7 +47,7 @@ function mesajlariCiz() {
       ${benim ? "" : `<div class="mesaj-kim">${esc(kimden)}</div>`}
       <div class="mesaj-balon">${istek}<div class="mesaj-metin">${esc(m.metin).replace(/\n/g, "<br>")}</div>
         <div class="mesaj-alt">${tamam}<span class="mesaj-saat">${saatYazisi(m.olusturma)}</span>${durumu}</div></div></div>`;
-  }).join("") : `<div class="mesaj-bos">Henüz mesaj yok. ${ben === "ogrenci" ? "Annene ya da babana bir şey söylemek istersen buraya yaz! 😊" : "Arın'a bir mesaj yaz."}</div>`;
+  }).join("") : `<div class="mesaj-bos">Henüz mesaj yok. ${ben === "ogrenci" ? "Annene ya da babana bir şey söylemek istersen buraya yaz! 😊" : "Öğrencine bir mesaj yaz."}</div>`;
   kap.scrollTop = kap.scrollHeight;
 }
 

@@ -11,6 +11,11 @@ veliGerekli = async () => { if (veliAktif()) return true; bildir("Bu işlemi yal
 veliCikis = () => {};
 veliGostergesiCiz = () => {
   document.body.classList.toggle("veli-modu", veliAktif());
+  document.body.classList.toggle("rol-ogrenci", !veliAktif());
+  const t = veliAktif() ? "Dersler" : "Derslerim";
+  if ($("#sk-dersler")) $("#sk-dersler").textContent = t;
+  if ($("#dersler-baslik")) $("#dersler-baslik").textContent = t;
+  if ($("#ders-geri-yazi")) $("#ders-geri-yazi").textContent = t;
   if (typeof kdPanelCiz === "function") kdPanelCiz();
 };
 
@@ -72,7 +77,9 @@ async function ogrenciSecVeBaslat(uygulamayiBaslat) {
   if (veli) {
     const liste = k.ogrenciler || [];
     const kayitli = (() => { try { return localStorage.getItem("ogretmenim-ogrenci"); } catch (_) { return null; } })();
-    if (liste.length === 1) oid = liste[0];
+    const istenen = new URLSearchParams(location.search).get("ogrenci");     // bildirimden açıldıysa o öğrenci
+    if (istenen && liste.includes(istenen)) oid = istenen;
+    else if (liste.length === 1) oid = liste[0];
     else if (kayitli && liste.includes(kayitli) && !girisBaslat.secimIste) oid = kayitli;
     else oid = await ogrenciSec(liste);
     if (!oid) return;
@@ -212,7 +219,19 @@ function hesapFormu(k) {
   $("#hf-yeni").hidden = !k;
   $("#hf-kaydet").textContent = k ? "Kaydet" : "Hesabı aç";
   hesapFormAlanlari();
+  icerikAlaniCiz(k);
   $$("#hesap-liste .hesap-satir").forEach(s => s.classList.toggle("secili", !!k && s.dataset.kisi === k.id));
+}
+/* İçerik paketleri (yazılı hazırlık vb.) yalnız atandığı öğrencide görünür */
+let paketKatalogu = null;
+async function icerikAlaniCiz(k) {
+  const alan = $("#hf-icerik-alan");
+  alan.hidden = !k || k.rol !== "ogrenci";
+  if (alan.hidden) return;
+  try { paketKatalogu = paketKatalogu || (await (await fetch("hazirlik/paketler.json")).json()).paketler; } catch (_) { paketKatalogu = []; }
+  let atanan = [];
+  try { atanan = await Bulut.icerikGetir(k.id); } catch (_) { /* yok */ }
+  $("#hf-icerik").innerHTML = paketKatalogu.map(p => `<label title="${guvenliMetin(p.aciklama || "")}"><input type="checkbox" value="${guvenliMetin(p.id)}"${atanan.includes(p.id) ? " checked" : ""}> ${guvenliMetin(p.ad)}</label>`).join("") || "<small>Paket yok</small>";
 }
 async function hesapKaydet(e) {
   e.preventDefault();
@@ -228,6 +247,7 @@ async function hesapKaydet(e) {
     } else {
       await Bulut.hesapGuncelle(hesapSecili.id, { ad, rol, ogrenciler, aktif: hesapSecili.id === girisKisi.id ? true : $("#hf-aktif").checked });
       if (sifre) await Bulut.sifreYenile(hesapSecili, sifre);
+      if (hesapSecili.rol === "ogrenci" && !$("#hf-icerik-alan").hidden) await Bulut.icerikAta(hesapSecili.id, $$("#hf-icerik input:checked").map(i => i.value));
       bildir(`${ad} kaydedildi${sifre ? "; yeni şifre geçerli" : ""}`);
     }
     if (hesapSecili && hesapSecili.id === girisKisi.id || !hesapSecili) girisKisi = await Bulut.kimim();

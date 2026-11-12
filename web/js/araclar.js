@@ -129,8 +129,7 @@ function ckKontrolEt() {
       : `<b>Tekrar denemelisin 💪</b><small>Adım adım bir kez daha dene, yapabilirsin!</small>`;
     ckCiz();
     // Veli istatistiği (Arın görmez)
-    fetch("/api/alistirma", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ arac: "cevap_kontrol", tur: islemTuru(islem), soru: islem, cevap: cevap + (kalan ? " k" + kalan : ""), dogru: r.dogru }) }).catch(() => {});
+    api("POST", "alistirma", { arac: "cevap_kontrol", tur: islemTuru(islem), soru: islem, cevap: cevap + (kalan ? " k" + kalan : ""), dogru: r.dogru }).catch(() => {});
   } catch (hata) {
     sonucKutu.className = "ck-sonuc uyari";
     sonucKutu.innerHTML = `<b>${esc(hata.message)}</b>`;

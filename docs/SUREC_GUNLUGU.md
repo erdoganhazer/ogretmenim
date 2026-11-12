@@ -50,3 +50,27 @@
   penceresi, iPhone'da adım adım yardım).
 - Denendi: manifest okunuyor, 66 dosya önbellekte, internet kesikken uygulama açılıyor, yeni sürüm yayınlanınca önbellek değişip sayfa yenileniyor,
   iPhone görünümünde yardım penceresi açılıyor.
+
+## 12.11.2026 — Toparlama: çelişkiler, roller, ders sayfası, aktarım, bildirim
+- **Çelişkiler giderildi:** öğrenci not/ortalama görmez (notlar `sinav_notlari/{id}` ayrı belgede, kural yalnız veliye açık; `Parcala` etkinlikten
+  ayırır, birleştirirken geri koyar). Konu Defteri, müzik, ödev ekleri, eski eşitleme/güncelleme/yedek/PIN panelleri kalktı
+  (defter.js, disari.js, muzik.js, baglanti.js silindi). Profil fotoğrafı 256 px JPEG olarak profilde. Boş rapor anlamsız cümle kurmuyor.
+- **Önemli hata:** mini oyunlar ve Cevap Kontrol sonuçlarını `fetch("/api/alistirma")` ile gönderiyordu; web'de bu adres yok, sonuçlar
+  kaybediliyordu. Artık `api()` ile motora gidiyor. Yazılı içeriği de `/hazirlik/...` mutlak yolla aranıyordu (Pages alt klasöründe 404); göreli yapıldı.
+- **İçerik paketleri:** `hazirlik/paketler.json` katalog; `yazili1.json` paketi `yazili-5-2026-d1-y1`. Öğrencinin ana belgesinde `icerik.paketler`;
+  Hesapları yönet › öğrenci › İçerik paketleri. Atanmamış öğrencide yazılı hazırlık ve otomatik yazılı tarihleri yok. Ana belge `merge` ile yazılır.
+- **Roller:** `body.veli-modu` / `.yalniz-veli` / `.yalniz-ogrenci`. Öğrenci: Bugün · Çalışma Masam · Öğren · Derslerim · Defterim.
+  Veli: Özet · Dersler · Rapor (+ Ayarlar). Veli girişinde Özet açılır.
+- **Ders sayfası** (`ders_sayfa.js`): sınavlar (velide notlu), kaynaklar, ders saatleri, yazılıya hazırlan, Notlarım (`ders_notlari`; öğrenci yazar, veli okur).
+- **Veli Özet** (`veli_ozet.js`): durum şeridi, senden beklenenler (aynı türden çoksa tek satır), hızlı giriş, son 7 gün, yaklaşan sınavlar + hazırlık, son notlar.
+  "Haberim var" → `ogrenciler/{oid}/veli/bilinen` (o gün tekrar çıkmaz; bildirime de gitmez).
+- **Öğrenci dosyası** (`ogrenci_dosyasi.js`, `Motor.disaAktar/iceAktar`): biçim `ogretmenim-ogrenci-dosyasi` v1. Eski yedek .zip (fflate) ya da dosya.
+  Önce deneme raporu; uygulamadan önce mevcut veri indirilir. Eşleştirme kimlik, yoksa doğal anahtar; ikinci yükleme hiçbir şey eklemez (test/ice_aktar_test.js).
+  Konu Defteri + ekler arşivi tek HTML (fotoğraflar gömülü). Ayarlar › Sınıf › "Dersleri sınıflar arasında taşı".
+- **Bildirimler:** istemci `bildirim.js` (FCM token, cihaz `kisiler/{ben}/cihazlar`, tercih `kisiler/{ben}/ayar/bildirim`); `sw.js` push + "Haberim var" eylemi;
+  sunucu `araclar/bildirim/gonder.mjs` (firebase-admin) ve kurallar `uyarilar.mjs` (veli Özet'iyle aynı); `.github/workflows/bildirim.yml` 7. ve 37. dakikalarda.
+  Günde bir kez, velinin saatinden sonra; gönderilen `ogrenciler/{oid}/veli/gonderilen`. VAPID anahtarı `firebase_ayar.js`.
+- **Kelime listeleri** Ayarlar'da (yerel 0.33'teki ekranın web karşılığı).
+- Testler: motor karşılaştırma 726 adım 0 fark (web'e özgü `icerik`, `ders_notlari` hariç), parça gidiş-dönüş, içe aktarım, uyarı kuralları; kurallar testine
+  `sinav_notlari`, `veli/`, `kisiler/*/cihazlar` eklendi. Uçtan uca: sahte Firebase ile kurulum → hesaplar + paket → eski zip aktarımı → veli Özet/Dersler/Rapor/
+  bildirim → öğrenci (notlu etkinlik 0) → ders notu → telefon görünümü; konsol hatası yok.

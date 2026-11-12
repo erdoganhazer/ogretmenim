@@ -110,7 +110,7 @@ function gizliGirisKur() {
 
 function veliAyarlariniCiz() {
   if (!veliAktif()) return;
-  formuDoldur(); raporCiz(); gelisimCiz(); planVeliCiz(); aracAyarlariCiz(); esitlemeCiz(); otoGuncelleCiz(); yedekleriCiz(); gunlukCiz(); sinifAyariCiz(); velileriCiz();
+  formuDoldur(); aracAyarlariCiz(); sinifAyariCiz(); kelimeYonetimCiz(); bildirimCiz(); sinifTasimaCiz();
   mesajRozetiCiz();
   araclariCiz();
   if ($("#sayfa-program").classList.contains("aktif")) programSayfasiCiz();
@@ -283,30 +283,13 @@ async function degisimYokla() {
       herSeyiYenile();
       if ($("#mesaj-pencere").open) { mesajlariCiz(); okunduIsaretle(); }
       if ($("#sayfa-program").classList.contains("aktif")) programSayfasiCiz();
-      if ($("#sayfa-defterler").classList.contains("aktif")) icerikCiz();
       if ($("#sayfa-plan").classList.contains("aktif")) planYukle();
     }
     sonSayac = sayac;
   } catch (_) { /* motor geçici olarak yoksa sessiz geç */ }
 }
 
-function veliOlaylariniKur() {
-  gizliGirisKur();
-  $("#veli-ekle-ac").addEventListener("click", () => { $("#veli-ekle-form").hidden = !$("#veli-ekle-form").hidden; });
-  $("#veli-ekle-form").addEventListener("submit", veliEkle);
-  $("#veli-listesi").addEventListener("click", veliListesiTik);
+function veliOlaylariniKur() {                      // web: yetki oturumdan; eski PIN, eşitleme ve veli listesi kalktı
   gorunumKur();
   $("#sinif-gec").addEventListener("click", sinifGec);
-  $("#paylasim-adresi").addEventListener("change", paylasimAdresiKaydet);
-  $("#esitleme-yenile").addEventListener("click", esitlemeCiz);
-  setInterval(degisimYokla, 5000);
-  $("#eslesme-kapat").addEventListener("click", () => { $("#eslesme-pencere").close(); velileriCiz(); esitlemeCiz(); });
-  $("#veli-kilitle").addEventListener("click", () => { veliCikis(); bildir("Veli modu kapatıldı 🔒"); });
-  $("#pin-form").addEventListener("submit", pinDegistir);
-  $("#gunluk-filtre").addEventListener("change", gunlukCiz);
-  $("#gunluk-yenile").addEventListener("click", gunlukCiz);
-  setInterval(() => {
-    if (veli.anahtar && !veliAktif()) { veliCikis(); bildir("Veli modu kendiliğinden kapandı 🔒"); }
-    veliGostergesiCiz();
-  }, 5000);
 }

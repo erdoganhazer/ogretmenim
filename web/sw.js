@@ -44,3 +44,26 @@ self.addEventListener("fetch", olay => {
     }
   })());
 });
+
+/* Veli bildirimleri (FCM web push, yalnız "data" mesajı): araclar/bildirim/gonder.mjs gönderir.
+   Bildirimdeki "Haberim var" düğmesi uygulamayı ?haberim=<anahtarlar>&ogrenci=<id> ile açar; uygulama kaydeder. */
+self.addEventListener("push", olay => {
+  let d = {};
+  try { const j = olay.data ? olay.data.json() : {}; d = j.data || j; } catch (_) { d = { baslik: "ÖğretmeniM", metin: olay.data ? olay.data.text() : "" }; }
+  const kok = self.registration.scope;
+  olay.waitUntil(self.registration.showNotification(d.baslik || "ÖğretmeniM", {
+    body: d.metin || "", icon: kok + "img/uygulama-192.png", badge: kok + "img/uygulama-192.png", tag: d.etiket || "ogretmenim",
+    renotify: true, data: { ogrenci: d.ogrenci || "", anahtarlar: d.anahtarlar || "" },
+    actions: d.anahtarlar ? [{ action: "haberim", title: "✓ Haberim var" }, { action: "ac", title: "Aç" }] : [],
+  }));
+});
+self.addEventListener("notificationclick", olay => {
+  olay.notification.close();
+  const v = olay.notification.data || {}, kok = self.registration.scope;
+  const adres = kok + (olay.action === "haberim" ? `?haberim=${encodeURIComponent(v.anahtarlar)}&ogrenci=${encodeURIComponent(v.ogrenci)}` : `?ogrenci=${encodeURIComponent(v.ogrenci || "")}`) + "#ozet";
+  olay.waitUntil((async () => {
+    const pencereler = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const p of pencereler) if (p.url.startsWith(kok)) { await p.focus(); p.postMessage({ tur: "bildirim", eylem: olay.action, ...v }); return; }
+    await self.clients.openWindow(adres);
+  })());
+});

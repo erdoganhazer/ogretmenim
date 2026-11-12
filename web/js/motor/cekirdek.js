@@ -70,7 +70,7 @@ const Cekirdek = (() => {
   const VELI_KAYIT_ALANLARI = { odevler: new Set(["bitti", "bitti_zaman"]), etkinlikler: new Set(), mesajlar: new Set(["okundu", "okunma_zamani", "tamam"]) };
   const MESAJ_DEGISEN = new Set(["okundu", "okunma_zamani", "tamam"]);
   const KOLEKSIYON_ADLARI = { odevler: "Ödev", dersler: "Ders", baglantilar: "Bağlantı", uniteler: "Defter ünitesi", konular: "Defter konusu",
-    notlar: "Defter notu", cep_notlari: "Cep notu", mesajlar: "Mesaj", muzikler: "Müzik", kelime_defterleri: "Kelime defteri", kelimeler: "Kelime" };
+    notlar: "Defter notu", cep_notlari: "Cep notu", ders_notlari: "Ders notu", mesajlar: "Mesaj", muzikler: "Müzik", kelime_defterleri: "Kelime defteri", kelimeler: "Kelime" };
   const RAPOR_DONEMLERI = { hafta: "Bu hafta", ay: "Son 4 hafta", donem: "Bu dönem" };
   const DERS_KAYNAK_SINIRI = 40, GUNLUK_SINIRI = 5000;
 
@@ -707,7 +707,11 @@ const Cekirdek = (() => {
     }
 
     /* ---------- yazılılar ---------- */
-    yaziliIcerigi() { return this.ortam.yazili || { yazililar: [] }; }
+    /* İçerik paketi atanmamış öğrencide yazılı içerik yok sayılır */
+    yaziliIcerigi() {
+      const y = this.ortam.yazili, atanan = ((this.veri.icerik || {}).paketler) || [];
+      return y && (!y.paket || atanan.includes(y.paket)) ? y : { yazililar: [] };
+    }
     static soruAnahtari(s) { s = s || ""; const i = s.lastIndexOf("SORU:"); return i >= 0 ? s.slice(i + 5).trim() : s; }
     static soruKimligi(q) { return Motor.soruAnahtari(q.s) + (dogru(al(q, "c")) ? ` [${pyStr(q.c)}]` : ""); }
     static etkinlikAnahtarlari(e) {
@@ -963,6 +967,119 @@ const Cekirdek = (() => {
       this.gunlugeYaz("veli", `Yeni sınıfa geçildi: ${yeni}. sınıf (${eski}. sınıf defterleri arşivde)`, "ayar");
       return yeni;
     }
+
+    /* ---------- öğrenci dosyası: dışa / içe aktarım ----------
+       Dosya biçimi "ogretmenim-ogrenci-dosyasi" sürüm 1: tüm sınıfların verisi. Eski yerel uygulamanın veri.json'u da
+       aynı işlevle alınır. Birleştirme: önce kimlikle, yoksa doğal anahtarla (ders adı+sınıf, defter adı, kelime, bağlantı adresi,
+       ödev ders+teslim+başlık, sınav ders+tarih); eşleşende yeni olan kazanır, boş alanlar doldurulur. Aynı dosya iki kez
+       yüklenirse hiçbir şey çoğalmaz. Konu Defteri (uniteler/konular/notlar) etkin veriye alınmaz; arşiv olarak verilir. */
+    static get DOSYA_BICIMI() { return "ogretmenim-ogrenci-dosyasi"; }
+    disaAktar(ek = {}) {
+      const v = kopya(this.veri);
+      delete v.guvenlik; delete v.esitleme;
+      return Object.assign({ bicim: Motor.DOSYA_BICIMI, surum: 1, uygulama: "ÖğretmeniM web", olusturma: this.simdi(),
+        ogrenci: { ad: (v.profil || {}).ogrenci_adi || "", sinif: al(v.ayarlar || {}, "aktif_sinif", 5) }, veri: v }, ek);
+    }
+    iceAktar(gelenHam, { kuru = false } = {}) {
+      const gelen = kopya(gelenHam && gelenHam.bicim === Motor.DOSYA_BICIMI ? gelenHam.veri : gelenHam);
+      if (!gelen || typeof gelen !== "object" || !gelen.koleksiyonlar) hata("Dosyada ÖğretmeniM verisi bulunamadı");
+      const hedef = kuru ? kopya(this.veri) : this.veri, K = hedef.koleksiyonlar, GK = gelen.koleksiyonlar;
+      const rapor = { koleksiyonlar: {}, plan: {}, uyarilar: [], arsiv: { uniteler: 0, konular: 0, notlar: 0 } };
+      const harita = {};                                   // koleksiyon → eski id → yeni id
+      const yeniMi = (a, b) => R.pyStrCmp(String(al(a, "degisme", "")), String(al(b, "degisme", ""))) > 0;
+      const kucuk = x => kf(String(x == null ? "" : x).trim());
+      const ANAHTAR = {
+        dersler: d => `${kucuk(d.ad)}|${al(d, "sinif", 5)}`,
+        kelime_defterleri: d => kucuk(d.ad),
+        kelimeler: k => `${k.defter_id}|${kucuk(k.kelime)}`,
+        baglantilar: b => kucuk(b.adres),
+        odevler: o => `${o.ders_id}|${o.teslim}|${kucuk(o.baslik)}`,
+        etkinlikler: e => `${e.tur}|${e.ders_id || ""}|${e.tarih}|${e.tur === "sinav" ? (e.sinav_turu || "yazili") : kucuk(e.baslik)}`,
+      };
+      const REF = { odevler: ["ders_id"], etkinlikler: ["ders_id"], kelimeler: ["defter_id"], ders_notlari: ["ders_id"] };
+      const SIRA = ["dersler", "kelime_defterleri", "kelimeler", "baglantilar", "odevler", "etkinlikler", "mesajlar", "cep_notlari", "ders_notlari"];
+      for (const kol of SIRA) {
+        const r = rapor.koleksiyonlar[kol] = { dosyada: 0, eklenen: 0, guncellenen: 0, ayni: 0, atlanan: 0 };
+        const m = harita[kol] = {};
+        if (!K[kol]) K[kol] = [];
+        const byId = new Map(K[kol].map(k => [k.id, k]));
+        const byAn = ANAHTAR[kol] ? new Map(K[kol].filter(k => !k.silindi).map(k => [ANAHTAR[kol](k), k])) : null;
+        for (const g0 of GK[kol] || []) {
+          if (!g0 || typeof g0 !== "object" || !g0.id) { r.atlanan++; continue; }
+          r.dosyada++;
+          const g = Object.assign({}, g0);
+          delete g._s;
+          for (const alan of REF[kol] || []) if (g[alan] && harita[alan === "defter_id" ? "kelime_defterleri" : "dersler"][g[alan]]) g[alan] = harita[alan === "defter_id" ? "kelime_defterleri" : "dersler"][g[alan]];
+          if (kol === "odevler") delete g.ekler;
+          let var_ = byId.get(g.id) || (byAn && !g.silindi ? byAn.get(ANAHTAR[kol](g)) : null);
+          if (!var_) { K[kol].push(g); byId.set(g.id, g); m[g0.id] = g.id; r.eklenen++; continue; }   // doğal anahtar yalnız önceden var olanlarla
+          m[g0.id] = var_.id;
+          const once = JSON.stringify(var_);
+          const kaynak = yeniMi(g, var_) ? g : var_, diger = kaynak === g ? var_ : g;
+          const birlesik = Object.assign({}, diger, kaynak);
+          for (const [a, d] of Object.entries(diger)) if (birlesik[a] === null || birlesik[a] === undefined || birlesik[a] === "") birlesik[a] = d;
+          if (kol === "odevler" && (g.bitti || var_.bitti)) { birlesik.bitti = true; birlesik.bitti_zaman = birlesik.bitti_zaman || g.bitti_zaman || var_.bitti_zaman; }
+          if (kol === "etkinlikler" && typeof birlesik.puan !== "number") { const p = [g.puan, var_.puan].find(x => typeof x === "number"); if (p !== undefined) birlesik.puan = p; }
+          birlesik.id = var_.id; birlesik._s = var_._s;
+          if (var_.silindi === false && !g0.silindi) birlesik.silindi = false;
+          for (const a of Object.keys(var_)) delete var_[a];
+          Object.assign(var_, birlesik);
+          if (var_._s === undefined) delete var_._s;
+          JSON.stringify(var_) === once ? r.ayni++ : r.guncellenen++;
+        }
+      }
+      for (const kol of ["uniteler", "konular", "notlar"]) rapor.arsiv[kol] = (GK[kol] || []).filter(x => x && !x.silindi).length;
+      // Plan
+      const P = hedef.plan, GP = gelen.plan || {}, od = id => harita.odevler[id] || id;
+      const anah = c => `${c.zaman}|${c.odev_id}|${c.durum}`;
+      const varC = new Set(P.calisma.map(anah));
+      let cE = 0;
+      for (const c0 of GP.calisma || []) { const c = Object.assign({}, c0, { odev_id: od(c0.odev_id) }); if (!varC.has(anah(c))) { P.calisma.push(c); varC.add(anah(c)); cE++; } }
+      P.calisma.sort((a, b) => R.pyStrCmp(String(a.tarih || ""), String(b.tarih || "")) || R.pyStrCmp(String(a.zaman || ""), String(b.zaman || "")));
+      const varS = new Set((P.secimler || []).map(x => `${x.zaman}|${x.odev_id}`));
+      for (const s0 of GP.secimler || []) { const s = Object.assign({}, s0, { odev_id: od(s0.odev_id) }); if (!varS.has(`${s.zaman}|${s.odev_id}`)) { (P.secimler = P.secimler || []).push(s); varS.add(`${s.zaman}|${s.odev_id}`); } }
+      for (const [t, g0] of Object.entries(GP.gunler || {})) {
+        const g = P.gunler[t] || (P.gunler[t] = {});
+        if (al(g0, "planlanan", 0) > al(g, "planlanan", 0)) g.planlanan = g0.planlanan;
+        if (g0.plan_odevler) g.plan_odevler = [...new Set((g.plan_odevler || []).concat(g0.plan_odevler.map(od)))].slice(0, 40);
+        if (g0.sabit) g.sabit = [...new Set((g.sabit || []).concat(g0.sabit))].sort();
+        if (g0.degerlendirme && !g.degerlendirme) g.degerlendirme = g0.degerlendirme;
+      }
+      for (const [t, v] of Object.entries(GP.ozel_gunler || {})) if (!(t in P.ozel_gunler)) P.ozel_gunler[t] = v;
+      for (const [t, v] of Object.entries(GP.sira || {})) if (!(t in P.sira)) P.sira[t] = (v || []).map(od);
+      if (!Object.keys(P.ayarlar || {}).length && GP.ayarlar) P.ayarlar = GP.ayarlar;
+      rapor.plan = { calisma: cE, gunler: Object.keys(GP.gunler || {}).length };
+      // Alıştırmalar ve günlük
+      const kel = id => harita.kelimeler[id] || id;
+      const aA = k => `${k.zaman}|${k.arac}|${k.soru}|${k.cevap || ""}|${k.dogru}`;
+      const varA = new Set(hedef.alistirmalar.map(aA));
+      let aE = 0;
+      for (const k0 of gelen.alistirmalar || []) { const k = Object.assign({}, k0); if (k.kelime) k.kelime = kel(k.kelime); if (!varA.has(aA(k))) { hedef.alistirmalar.push(k); varA.add(aA(k)); aE++; } }
+      hedef.alistirmalar.sort((a, b) => R.pyStrCmp(String(a.zaman), String(b.zaman)));
+      const gA = k => `${k.zaman}|${k.metin}`, varG = new Set(hedef.gunluk.map(gA));
+      let gE = 0;
+      for (const k of gelen.gunluk || []) if (k && !varG.has(gA(k))) { hedef.gunluk.push(k); varG.add(gA(k)); gE++; }
+      hedef.gunluk.sort((a, b) => R.pyStrCmp(String(a.zaman), String(b.zaman)));
+      rapor.alistirmalar = { dosyada: (gelen.alistirmalar || []).length, eklenen: aE };
+      rapor.gunluk = { dosyada: (gelen.gunluk || []).length, eklenen: gE };
+      // Profil, program, sınıf
+      const pr = hedef.profil, gp = gelen.profil || {};
+      for (const [a, v] of Object.entries(gp)) if (a in pr && !pr[a] && v && typeof v === "string" && !v.startsWith("/foto/")) pr[a] = v;
+      const dp = gelen.ders_programi;
+      if (dp && dp.hucreler && !Object.keys(hedef.ders_programi.hucreler || {}).length) {
+        const h = {};
+        for (const [k, d] of Object.entries(dp.hucreler)) h[k] = harita.dersler[d] || d;
+        hedef.ders_programi = { saatler: dp.saatler || [], hucreler: h, degisme: this.simdi() };
+        rapor.program = true;
+      }
+      const gs = al(gelen.ayarlar || {}, "aktif_sinif", null);
+      if (gs && gs !== al(hedef.ayarlar, "aktif_sinif", 5)) rapor.uyarilar.push(`Dosyadaki öğrenci ${gs}. sınıftaydı; buradaki etkin sınıf ${al(hedef.ayarlar, "aktif_sinif", 5)}. Dersler kendi sınıflarıyla geldi.`);
+      if (gelen.tohum && gelen.tohum.odev_listeleri) hedef.tohum.odev_listeleri = [...new Set((hedef.tohum.odev_listeleri || []).concat(gelen.tohum.odev_listeleri))];
+      rapor.harita = harita;
+      if (!kuru) this.gunlugeYaz("veli", `Öğrenci dosyası içe aktarıldı: ${SIRA.map(k => `${KOLEKSIYON_ADLARI[k] || k} +${rapor.koleksiyonlar[k].eklenen}`).join(", ")}`, "ekle");
+      return rapor;
+    }
+
     veriDisari() {
       const s = {};
       for (const [k, v] of Object.entries(this.veri)) if (!["guvenlik", "esitleme", "plan", "alistirmalar", "gunluk"].includes(k)) s[k] = v;

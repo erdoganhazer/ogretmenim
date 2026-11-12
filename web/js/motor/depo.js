@@ -57,6 +57,9 @@ const Depo = (() => {
     }
     return sonuc;
   }
-  return { baslat, istek, oku, yaz, bulutaBagla };
+  /* İçe/dışa aktarım için etkin motor (bulut ya da yerel) ve kaydetme */
+  async function motorAl() { return bulut ? bulut.motor : await baslat(); }
+  async function kaydet() { if (bulut) bulut.kaydet(); else await yaz(JSON.parse(JSON.stringify(motor.veri))); }
+  return { baslat, istek, oku, yaz, bulutaBagla, motorAl, kaydet };
 })();
 if (typeof module !== "undefined") module.exports = Depo;

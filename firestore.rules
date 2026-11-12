@@ -28,6 +28,11 @@ service cloud.firestore {
       allow list: if yonetici();
       allow write: if yonetici();
     }
+    // Her kişinin kendi bildirim cihazları ve tercihleri (yönetici de görür)
+    match /kisiler/{k}/{alt}/{belge} {
+      allow read: if aktif() && (kisiId() == k || yonetici());
+      allow write: if aktif() && kisiId() == k && alt in ['cihazlar', 'ayar'];
+    }
     match /kisiler/{k} {
       // herkes kendi kaydını; veli kendi öğrencilerinin adını; yönetici hepsini görür
       allow get: if girdi() && (kisiId() == k || yonetici() || veliOf(k));
@@ -66,7 +71,8 @@ service cloud.firestore {
         // Veli her şeyi yazar (silme yok: silindi işareti). Notlarım (ders_notlari) öğrencinindir: veli yalnız okur.
         allow create, update: if veliOf(oid) && kol in ['dersler', 'odevler', 'etkinlikler', 'baglantilar', 'cep_notlari', 'mesajlar',
                                                        'kelime_defterleri', 'kelimeler']
-                                && request.resource.data.id == kid;
+                                && request.resource.data.id == kid
+                                && !(kol == 'etkinlikler' && 'puan' in request.resource.data);   // not ayrı belgede (sinav_notlari)
         // Öğrenci: korumalı koleksiyonlara yazamaz; kendi kaydını 'ogrenci' kaynağıyla açar; not (puan) giremez
         allow create: if ogrenciOf(oid) && kol in ['odevler', 'etkinlikler', 'cep_notlari', 'mesajlar', 'ders_notlari']
                          && request.resource.data.id == kid && request.resource.data.kaynak == 'ogrenci'
@@ -81,6 +87,17 @@ service cloud.firestore {
         // Öğrencinin girdiği ödevdeki kaynak adları dersin kaynak listesine eklenir (eski motordaki gibi)
         allow update: if ogrenciOf(oid) && kol == 'dersler' && degisen().hasOnly(['kaynaklar', 'kaynak_gizli']);
         allow delete: if false;
+      }
+
+      // Sınav notları: yalnız veli (ileride öğretmen) okur ve yazar; öğrenci hiç göremez
+      match /sinav_notlari/{sid} {
+        allow read, create, update: if veliOf(oid);
+        allow delete: if false;
+      }
+
+      // Velilerin ortak notları: "haberim var" listesi, gönderilen bildirimler (öğrenci görmez)
+      match /veli/{belge} {
+        allow read, write: if veliOf(oid);
       }
 
       // Plan ayarları: veli yazar

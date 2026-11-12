@@ -581,7 +581,7 @@ async function planVeliCiz() {
   const gunler = oz.gunler.map(g => `<tr><td>${esc(gunuYaz(g.tarih).split(" ").slice(0, 3).join(" "))}</td><td>${g.planlanan || "–"}</td><td>${g.yapilan || "–"}</td>
       <td>${g.gercek || "–"}</td><td>${g.biten}${g.yarim ? ` <small>+${g.yarim} yarım</small>` : ""}</td><td>${g.zor ? "😕 " + g.zor : ""}</td><td>${g.disarida ? "🏫 " + g.disarida : ""}${g.secim ? ` <small>↪ ${g.secim} seçim</small>` : ""}</td>
       <td>${g.degerlendirme ? { kolay: "😊", iyi: "🙂", zor: "😓" }[g.degerlendirme.deger] + (g.degerlendirme.not ? " " + esc(g.degerlendirme.not) : "") : ""}</td>
-      <td>${g.ozel ? `★ ${g.ozel.dk} dk ${esc(g.ozel.not || "")} <small>(${g.ozel.kim === "veli" ? "veli" : "Arın"})</small>` : ""}${g.sira_degisti ? " ↕" : ""}</td></tr>`).join("");
+      <td>${g.ozel ? `★ ${g.ozel.dk} dk ${esc(g.ozel.not || "")} <small>(${g.ozel.kim === "veli" ? "veli" : "öğrenci"})</small>` : ""}${g.sira_degisti ? " ↕" : ""}</td></tr>`).join("");
   const dersler = oz.dersler.map(d => `<li><b>${esc(dersAdiBul(d.ders_id))}</b>: tahmin ${d.plan} dk, gerçek ${d.gercek} dk
       <span class="${d.gercek > d.plan * 1.25 ? "uyari-yazi" : ""}">(${d.plan ? Math.round(d.gercek / d.plan * 100) : 0}%)</span></li>`).join("");
   const notlar = [...oz.zorlar.map(z => ({ ...z, t: "😕 zorlandı" })), ...oz.yarimlar.map(z => ({ ...z, t: "◐ yarım" }))]
@@ -617,7 +617,7 @@ function planAyarFormu(a) {
       <fieldset><legend>Planlama</legend>
         <label>Teslimden kaç gün önce bitsin <small>(son gün dışında pay)</small><input type="number" name="tampon_gun" min="0" max="3" value="${a.tampon_gun}" class="dar"></label>
         <label>Çalışma bloğu / mola (dk) <span><input type="number" name="blok_dk" min="10" max="60" value="${a.blok_dk}" class="dar"> / <input type="number" name="mola_dk" min="0" max="20" value="${a.mola_dk}" class="dar"></span></label>
-        <label class="anahtar"><input type="checkbox" name="arin_sira"${a.arin_sira ? " checked" : ""}> <span>Arın günün sırasını değiştirebilsin</span></label></fieldset>
+        <label class="anahtar"><input type="checkbox" name="arin_sira"${a.arin_sira ? " checked" : ""}> <span>Öğrenci günün sırasını değiştirebilsin</span></label></fieldset>
       <fieldset class="genis"><legend>Her gün yapılacaklar (ödev süresine sayılmaz)</legend>
         <div id="sabit-listesi">${(a.sabitler || []).map(sabitSatiri).join("")}</div>
         <button type="button" class="dugme kucuk" id="sabit-ekle">＋ Ekle</button></fieldset>
