@@ -129,7 +129,7 @@ function bildirimOlaylariniKur() {
         if (ne === "kapat") { await Bulut.cihazYaz(OTURUM.kisi, localStorage.getItem("ogretmenim-cihaz"), { aktif: false }); return bildirimCiz(); }
         if (ne === "dene") {
           const k = await navigator.serviceWorker.ready;
-          return k.showNotification("ÖğretmeniM", { body: "Bildirimler bu cihazda çalışıyor 👍", icon: "img/uygulama-192.png" });
+          return k.showNotification("ÖğretmeniM", { body: "Bildirimler bu cihazda çalışıyor 👍", icon: "img/uygulama-192.png", badge: "img/bildirim-rozet.png" });
         }
       }
       const c = e.target.closest("[data-bl-cihaz]");
