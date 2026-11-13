@@ -64,6 +64,12 @@
 - Yeni sürüm yayındaysa aynı satırda **⬆ Güncelle** çıkar; basınca uygulama yeni sürüme geçer. (Kendiliğinden de geçer; düğme beklememek için.)
 - Sürüm = commit'in kısa kimliği; yayında `araclar/sw_damgala.py` yazar (`web/surum.json` yayındaki, `web/js/surum.js` cihazda çalışan sürüm).
 
+## Uygulama simgeleri
+- Windows/Linux masaüstü: `uygulama-192/512.png` (dışı şeffaf, beyaz yuvarlak + logo).
+- Android ve Mac (Chrome): `uygulama-maskable-*.png` — beyaz zemin, logo güvenli alanın (ortadaki %80 daire) içinde; sistem kendi şekline kırpar.
+- iPhone/iPad ve Mac Safari: `apple-touch-icon.png` — beyaz zemin, köşeleri sistem yuvarlar. Bildirim çubuğu: `bildirim-rozet.png` (tek renkli silüet).
+- Yüklü uygulamanın simgesi kendiliğinden (genelde bir gün içinde) yenilenir; hemen görmek için uygulamayı kaldırıp yeniden yükle.
+
 ## Uygulamayı yükleme
 - **Android (Chrome/Samsung):** siteyi aç › menü ya da giriş ekranındaki **📲 Uygulamayı yükle** › Yükle. Simge ana ekrana gelir.
 - **iPhone/iPad:** Safari › Paylaş › **Ana Ekrana Ekle** (uygulamadaki 📲 düğmesi adımları gösterir). Ana ekrandan ilk açışta bir kez giriş gerekir.

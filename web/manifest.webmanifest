@@ -8,14 +8,41 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "orientation": "any",
-  "background_color": "#16222F",
+  "background_color": "#FFFFFF",
   "theme_color": "#1B2A3B",
-  "categories": ["education", "productivity"],
+  "categories": [
+    "education",
+    "productivity"
+  ],
   "icons": [
-    { "src": "img/uygulama-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "img/uygulama-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "img/uygulama-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "img/uygulama-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "img/uygulama-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "img/uygulama-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "img/uygulama-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
