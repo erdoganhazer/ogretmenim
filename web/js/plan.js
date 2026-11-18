@@ -95,18 +95,32 @@ function planCiz() {
   if (typeof anaSiradakiCiz === "function") anaSiradakiCiz();
 }
 
+/* Plan bir haftadan uzunsa: işi ya da teslimi olan son günün sırası (yoksa -1). Planlayıcı en çok 21 gün ileriye plan yapar. */
+function planSonDoluGun(gunler, acik) {
+  let son = -1;
+  gunler.forEach((g, i) => { if ((g.gorevler || []).length || acik.some(o => o.teslim === g.tarih)) son = i; });
+  return son;
+}
+function planTamamiDugmesi(gunler, ilk, son, acikMi, veri) {
+  if (son < ilk) return "";
+  const kalan = son - ilk + 1, t = strTarih(gunler[son].tarih);
+  return `<button type="button" class="dugme plan-tamami-dugme" data-plan-tamami="${veri}">${acikMi ? "▴ Yalnız bu haftayı göster"
+    : `📅 Planın tamamı: ${kalan} gün daha (${t.getDate()} ${AYLAR[t.getMonth()]} tarihine kadar) ▾`}</button>`;
+}
+
 /* ---------- 0.21: Haftalık planım (sayfanın altında, günler yan yana) + Planı yenile ---------- */
 function haftalikPlanCiz() {
   const kap = $("#pl-haftalik");
   if (!kap || !plan.veri) return;
-  const gunler = plan.veri.gunler.slice(0, 7);
   const acik = aktifOdevler().filter(o => !o.bitti);
+  const son = planSonDoluGun(plan.veri.gunler, acik);
+  const gunler = plan.veri.gunler.slice(0, plan.tamami && son >= 7 ? son + 1 : 7);
   const bitenler = bugunBitenler();
   const satirHtml = (ders_id, metin, sinif = "") => {
     const d = dersBul(ders_id) || { ad: "Ders", renk: "#888" };
     return `<li class="hp-is${sinif}" style="--r:${esc(d.renk)}"><b>${esc(d.ad.length > 16 && d.kisa ? d.kisa : d.ad)}</b><span>${esc(metin)}</span></li>`;
   };
-  kap.innerHTML = `<div class="hp-ust"><h3>📅 Haftalık planım</h3>
+  kap.innerHTML = `<div class="hp-ust"><h3>📅 ${plan.tamami && son >= 7 ? "Planın tamamı" : "Haftalık planım"}</h3>
       <span class="hp-saat"></span>
       <button class="dugme" data-pl="yenile" title="Ödevlerin son durumuna göre planı baştan yap">🔄 Planı yenile</button></div>
     <div class="hp-gunler">${gunler.map((g, i) => {
@@ -120,7 +134,8 @@ function haftalikPlanCiz() {
         <ul>${isler.join("") || `<li class="hp-bos">Serbest 🎈</li>`}</ul>
         ${teslim.length ? `<div class="hp-teslim">📦 Teslim: ${teslim.map(o => esc((dersBul(o.ders_id) || {}).kisa || dersAdiBul(o.ders_id))).join(", ")}</div>` : ""}
       </div>`;
-    }).join("")}</div>`;
+    }).join("")}</div>
+    ${planTamamiDugmesi(plan.veri.gunler, 7, son, !!plan.tamami, "ogrenci")}`;
 }
 async function planiYenile() {
   try { durum.veri = await api("GET", "veri"); } catch (_) {}
@@ -679,6 +694,10 @@ function planOlaylariniKur() {
   $("#pl-sonra").addEventListener("click", async e => {
     const g = e.target.closest("[data-geri-al]");
     if (g) { try { await planIslem({ tur: "geri_al", odev_id: g.dataset.geriAl }); bildir("Geri alındı; plan yenilendi"); } catch (h) { bildir(h.message, true); } }
+  });
+  document.addEventListener("click", e => {
+    const b = e.target.closest('[data-plan-tamami="ogrenci"]');
+    if (b) { plan.tamami = !plan.tamami; haftalikPlanCiz(); }
   });
   $("#pl-sekmeler").addEventListener("click", e => { const b = e.target.closest("[data-sekme]"); if (b) { plan.sekme = b.dataset.sekme; sagCiz(); } });
   $("#pl-sekme-ic").addEventListener("change", async e => {

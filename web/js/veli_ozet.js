@@ -135,15 +135,18 @@ function ozGorevlerCiz(plan) {
   $("#oz-gorev-sayac").textContent = top ? `${tamam.length}/${top} tamam` : "";
   kap.innerHTML = top ? `<div class="oz-gorev-cubuk"><i style="width:${Math.round(100 * tamam.length / top)}%"></i></div>
       <ul class="oz-cl-liste">${eksik.join("")}${tamam.join("")}</ul>` : `<p class="oz-bos">Bugün için görev yok 🎈</p>`;
-  // haftanın görevleri: yarından 6 gün
-  const acik = odevler.filter(o => !o.bitti);
-  hafta.innerHTML = `<div class="oz-hafta-gunler">${plan.gunler.slice(1, 7).map((g, i) => {
+  // haftanın görevleri: yarından 6 gün; plan daha uzunsa "Planın tamamı" ile hepsi
+  const acik = odevler.filter(o => !o.bitti), son = planSonDoluGun(plan.gunler, acik);
+  const bitis = VO.tamami && son >= 7 ? son + 1 : 7;
+  hafta.innerHTML = `<div class="oz-hafta-gunler">${plan.gunler.slice(1, bitis).map((g, i) => {
     const teslim = acik.filter(o => o.teslim === g.tarih);
     const isler = (g.gorevler || []).map(t => { const d = ders(t.ders_id); return `<li style="--r:${esc(d.renk)}"><b>${esc(d.ad)}</b> ${esc(t.parca)}</li>`; });
     return `<div class="oz-hg${g.ozel ? " ozel" : ""}"><div class="oz-hg-ad"><b>${i === 0 ? "Yarın" : esc(g.gun)}</b><small>${strTarih(g.tarih).getDate()} ${AYLAR[strTarih(g.tarih).getMonth()]}</small></div>
       <ul>${isler.join("") || `<li class="oz-hg-bos">Serbest 🎈</li>`}</ul>
       ${teslim.length ? `<div class="oz-hg-teslim">📦 Teslim: ${teslim.map(o => esc(ders(o.ders_id).ad)).join(", ")}</div>` : ""}</div>`;
-  }).join("")}</div>`;
+  }).join("")}</div>${planTamamiDugmesi(plan.gunler, 7, son, !!VO.tamami, "veli")}`;
+  const bas = hafta.closest(".panel") && hafta.closest(".panel").querySelector(".panel-baslik");
+  if (bas) bas.textContent = VO.tamami && son >= 7 ? "📅 Planın tamamı" : "📅 Haftanın görevleri";
 }
 
 function raporSayfasiCiz() {
@@ -174,6 +177,7 @@ function veliOzetOlaylariniKur() {
       catch (h2) { bildir(h2.message, true); }
       return;
     }
+    if (e.target.closest('[data-plan-tamami="veli"]')) { VO.tamami = !VO.tamami; return ozGorevlerCiz(VO.son); }
     const s = e.target.closest("[data-oz-sinav]");
     if (s) { const k = kayitBul("etkinlikler", s.dataset.ozSinav); if (k) pencereAc("sinav", k); return; }
     const o = e.target.closest("[data-oz-odev]");

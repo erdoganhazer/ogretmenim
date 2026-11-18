@@ -2259,3 +2259,6 @@ body:not(.veli-modu) .yalniz-veli { display: none !important; }
 .oz-hg-bos { color: var(--yazi-soluk); border: 0 !important; padding: 0 !important; }
 .oz-hg-teslim { font-size: 12.5px; color: var(--vurgu); }
 @media (max-width: 760px) { .oz-hafta-gunler { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Plan bir haftadan uzunsa: "Planın tamamı" düğmesi */
+.plan-tamami-dugme { display: block; width: 100%; margin-top: 12px; text-align: center; }

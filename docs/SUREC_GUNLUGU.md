@@ -123,3 +123,9 @@
 - Bütçe uyarısı: aynı ay aynı eşik bir kez (`sistem/butce.uyarilan`); yöneticilerin gelen kutusuna + cihazlarına.
 - Emülatörde denendi (firestore+functions+pubsub): kuyruk kaydı tetikleyiciyle işlenip silindi; bütçe mesajı iki kez gelse de yöneticiye tek bildirim.
 - Yükleme: `.github/workflows/fonksiyonlar.yml` (Firestore bölgesini okuyup `functions/.env`'e FONK_BOLGE yazar). Blaze ve roller kullanıcıda.
+
+## 18.11.2026 — Bir haftadan uzun plan
+- Planlayıcı zaten son teslime kadar (en çok 21 gün) plan yapıyordu; ekranlar ilk 7 günde kesiyordu. Öğrencinin "Haftalık planım"ı ve velinin
+  "Haftanın görevleri" bölümünün altına, plan bir haftayı aşınca "📅 Planın tamamı: N gün daha (… tarihine kadar)" düğmesi; açınca son dolu güne
+  (işi ya da teslimi olan son gün) kadar bütün günler, başlık "Planın tamamı" olur; "Yalnız bu haftayı göster" ile geri döner.
+- Denendi (telefon boyutu, 2/12/18 gün sonra teslimli ödevler): veli 6 → 15 gün, öğrenci 7 → 16 gün; taşma ve hata yok.
