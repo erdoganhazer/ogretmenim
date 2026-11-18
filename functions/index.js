@@ -27,6 +27,7 @@ export const kuyrukGonder = onDocumentCreated("bildirim_kuyrugu/{id}", async ola
   logger.info("kuyruk", olay.params.id, r);
 });
 
+// Zamanlayıcı (Cloud Scheduler) bu fonksiyonu 30 dakikada bir çağırır; çağırma izni yüklemede verilir (Cloud Run Admin gerekir).
 export const gunlukUyarilar = onSchedule({ schedule: "every 30 minutes", timeZone: "Europe/Istanbul" }, async () => {
   logger.info("günlük uyarılar", await gunluk(ortam()));
 });

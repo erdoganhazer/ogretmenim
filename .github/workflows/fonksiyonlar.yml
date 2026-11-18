@@ -30,6 +30,8 @@ jobs:
           gcloud services enable cloudbilling.googleapis.com cloudfunctions.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com \
             run.googleapis.com eventarc.googleapis.com pubsub.googleapis.com cloudscheduler.googleapis.com storage.googleapis.com --project ogretmenim-d0524
           sleep 20
+      - name: Yanlış bölgede kalmış eski fonksiyonu sil (varsa)
+        run: gcloud functions delete gunlukUyarilar --region=europe-west1 --gen2 --quiet --project ogretmenim-d0524 || true
       - run: npm ci --no-audit --no-fund
         working-directory: functions
       - name: Fonksiyonları yükle
