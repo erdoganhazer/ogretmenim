@@ -47,12 +47,16 @@
 - Fonksiyonlar (`functions/`): **kuyrukGonder** (mesaj/duyuru/ödev bildirimi anında), **gunlukUyarilar** (30 dakikada bir veli uyarıları),
   **butceUyarisi** (bütçe eşiği aşılınca yöneticilere 🔔 + telefon). Ortak mantık `functions/ortak/`. `functions/` main'e gelince
   Actions › "Firebase fonksiyonları" yükler (Firestore bölgesini kendisi bulur).
-- **Kurulum (bir kez):**
-  1. Firebase › proje › sol altta plan › **Blaze**'e geç (kart). Ücretsiz kota aynen geçerli; aşılmadıkça ücret yok.
-  2. Google Cloud › IAM › `firebase-adminsdk-…` hizmet hesabına **Editor** ve **Project IAM Admin** rolleri.
-  3. Actions › "Firebase fonksiyonları" › Run workflow (ilk yüklemede Google bir izin hatası verirse birkaç dakika sonra yeniden çalıştır).
-  4. Google Cloud › Faturalandırma › **Bütçeler ve uyarılar** › Bütçe oluştur: proje ogretmenim-d0524, tutar 1 USD (≈ ücretsiz kotanın üstündeki ilk harcama),
-     eşikler %50 / %90 / %100, e-posta uyarısı açık, **"Pub/Sub konusuna bağla" → `butce-uyari`**. Böylece eşik aşılınca yöneticiye zil + telefon bildirimi gelir.
+- **Kurulum (bir kez, 18.11.2026'da yapıldı):**
+  1. Firebase › Blaze planı (bütçe 40 TL; Google 90 günlük deneme kredisi verdi).
+  2. `firebase-adminsdk-fbsvc@…` hizmet hesabına roller: **Editor**, **Service Usage Consumer**, **Cloud Run Admin**
+     (+ Project IAM Admin ya da Google'ın istediği üç hizmet ajanı izni — Cloud Shell'de verildi:
+     pubsub ajanına Service Account Token Creator; `…-compute@developer` hesabına Cloud Run Invoker ve Eventarc Event Receiver).
+  3. Actions › "Firebase fonksiyonları" (functions/ değişince kendiliğinden). Gerekli Google servislerini kendisi açar,
+     Firestore bölgesini (**europe-west3**, Frankfurt) bulup `functions/bolge.txt`'ye yazar. Çalışma ortamı **Node.js 22**
+     (Google Node 20'yi 31.10.2026'da kaldırdı). İlk yüklemede "Eventarc Service Agent" hatası olursa birkaç dakika sonra yeniden çalıştır.
+  4. Google Cloud › Faturalandırma › **Bütçeler ve uyarılar** › 40 TL'lik bütçe › eşikler %50/%90/%100, e-posta açık,
+     **"Pub/Sub konusuna bağla" → `butce-uyari`**. Böylece eşik aşılınca yöneticiye zil + telefon bildirimi gelir.
 - Maliyet sınırı: her fonksiyon en çok 2 örnek, 256 MB.
 
 ## Bildirim zili (🔔)

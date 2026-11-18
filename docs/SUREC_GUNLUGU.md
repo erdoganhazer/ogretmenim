@@ -129,3 +129,9 @@
   "Haftanın görevleri" bölümünün altına, plan bir haftayı aşınca "📅 Planın tamamı: N gün daha (… tarihine kadar)" düğmesi; açınca son dolu güne
   (işi ya da teslimi olan son gün) kadar bütün günler, başlık "Planın tamamı" olur; "Yalnız bu haftayı göster" ile geri döner.
 - Denendi (telefon boyutu, 2/12/18 gün sonra teslimli ödevler): veli 6 → 15 gün, öğrenci 7 → 16 gün; taşma ve hata yok.
+
+## 18.11.2026 — Firebase fonksiyonları yayında
+- Blaze'e geçildi; üç fonksiyon europe-west3'te çalışıyor: kuyrukGonder (anında bildirim), gunlukUyarilar (30 dk), butceUyarisi (Pub/Sub butce-uyari).
+- Yolda çıkanlar: Node 20 kaldırılmış → Node 22; Cloud Billing API kapalı → iş akışı gerekli servisleri açıyor; hizmet ajanı izinleri (Cloud Shell);
+  Service Usage Consumer + Cloud Run Admin (zamanlayıcının fonksiyonu çağırma izni); `.env` kod incelendikten sonra yüklendiği için bölge
+  `bolge.txt`'den okunuyor; yanlış bölgede kalan eski kopya iş akışında siliniyor.
