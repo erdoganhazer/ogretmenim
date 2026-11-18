@@ -11,10 +11,13 @@ import { setGlobalOptions, logger } from "firebase-functions/v2";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onMessagePublished } from "firebase-functions/v2/pubsub";
+import { readFileSync } from "node:fs";
 import { kuyrukKaydiniIsle, gunlukUyarilar as gunluk, butceUyarisi as butce } from "./ortak/gonderim.mjs";
 
 initializeApp();
-const BOLGE = process.env.FONK_BOLGE || "europe-west1";
+/* Bölge: yükleme işi Firestore'un bölgesini bolge.txt'ye yazar (firebase-tools .env'i kodu inceledikten sonra yüklediği için dosyadan okunur) */
+const BOLGE = (() => { try { return readFileSync(new URL("./bolge.txt", import.meta.url), "utf8").trim(); } catch (_) { return ""; } })()
+  || process.env.FONK_BOLGE || "europe-west3";
 setGlobalOptions({ region: BOLGE, maxInstances: 2, memory: "256MiB" });
 const ortam = () => ({ db: getFirestore(), messaging: getMessaging(), FieldPath, kuru: false, log: (...a) => logger.info(...a) });
 

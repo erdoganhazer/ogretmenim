@@ -24,6 +24,7 @@ jobs:
           case "$KONUM" in nam5) B=us-central1 ;; eur3) B=europe-west1 ;; "") echo "::error::Firestore bölgesi okunamadı"; exit 1 ;; *) B="$KONUM" ;; esac
           echo "Firestore: $KONUM → fonksiyon bölgesi: $B"
           echo "FONK_BOLGE=$B" > functions/.env
+          echo "$B" > functions/bolge.txt
       - name: Gerekli Google servislerini aç (ilk kurulumda; açıksa hiçbir şey yapmaz)
         run: |
           gcloud services enable cloudbilling.googleapis.com cloudfunctions.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com \
