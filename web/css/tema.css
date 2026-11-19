@@ -1,5 +1,6 @@
 /* ÖğretmeniM teması — renkler logodan ve örnek profil ekranından alındı */
 :root {
+  color-scheme: dark;              /* tarayıcı sayfayı ayrıca karartmasın (Samsung/Chrome otomatik koyu mod) */
   --zemin:        #16222F;
   --zemin-ust:    #1B2A3B;
   --panel:        #243A55;
@@ -2262,3 +2263,6 @@ body:not(.veli-modu) .yalniz-veli { display: none !important; }
 
 /* Plan bir haftadan uzunsa: "Planın tamamı" düğmesi */
 .plan-tamami-dugme { display: block; width: 100%; margin-top: 12px; text-align: center; }
+
+/* İçi boş rozet görünmesin (ör. ders programı yokken "Dersler" başlığındaki tarih) */
+.rozet:empty { display: none; }

@@ -135,3 +135,11 @@
 - Yolda çıkanlar: Node 20 kaldırılmış → Node 22; Cloud Billing API kapalı → iş akışı gerekli servisleri açıyor; hizmet ajanı izinleri (Cloud Shell);
   Service Usage Consumer + Cloud Run Admin (zamanlayıcının fonksiyonu çağırma izni); `.env` kod incelendikten sonra yüklendiği için bölge
   `bolge.txt`'den okunuyor; yanlış bölgede kalan eski kopya iş akışında siliniyor.
+
+## 19.11.2026 — Samsung A05 düzen hatası
+- Belirti (gerçek cihaz, yüklü uygulama): üst şerit saat çubuğunun altında, alt sekme çubuğu Android gezinme çubuğunun altında kalıyordu;
+  renkler koyulaşmış (sarı düğme kahverengi), "Dersler" başlığında boş rozet.
+- Neden: `viewport-fit=cover` sayfayı sistem çubuklarının altına uzatıyor, ama A05'teki Chrome güvenli alan payını (env(safe-area-inset-*)) 0
+  bildiriyor. Renkler: tarayıcının otomatik koyu modu sayfayı ayrıca karartıyordu.
+- Düzeltme: `viewport-fit=cover` kaldırıldı (sayfa sistem çubuklarının arasında kalır); `<meta name="color-scheme" content="dark">` ve
+  `:root { color-scheme: dark }` (tarayıcı sayfayı karartmaz); `.rozet:empty` gizli. 360×800'de denendi.
